@@ -42,8 +42,7 @@ RUN mkdir -p ~/ros_ws/src
 
 RUN cd ~/ros_ws/src && /bin/bash -c "source /ros_entrypoint.sh; catkin_init_workspace"
 WORKDIR ${HOME}/ros_ws/src
-#RUN git clone https://github.com/frankaemika/franka_ros.git && mv franka_ros/franka_description ./franka_description \
-#    && rm -r franka_ros
+RUN git clone https://github.com/justagist/franka_panda_description.git
 COPY --chown=ros . ./pybullet_ros/
 RUN rm -rf ./pybullet_ros/docker ./pybullet_ros/Dockerfile
 RUN cd ${HOME}/ros_ws && /bin/bash -c "source /ros_entrypoint.sh; catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
