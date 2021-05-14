@@ -88,7 +88,7 @@ class PyBulletSim(object):
         """
         Step the simulation.
         """
-        if not self.rt_sim and not self.pause_simulation:
+        if not self.rt_sim:
             pb.stepSimulation(self.uid)
 
     def reset_simulation(self, req):

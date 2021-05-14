@@ -7,10 +7,12 @@ position, velocity and effort control for all revolute joints on the robot
 import rospy
 from std_msgs.msg import Float64
 
+
 # NOTE: 2 classes are implemented here, scroll down to the next class (Control) to see the plugin!
 
 class pveControl:
     """helper class to receive position, velocity or effort (pve) control commands"""
+
     def __init__(self, joint_index, joint_name, controller_type):
         """constructor
         Assumes joint_name is unique, creates multiple subscribers to receive commands
@@ -18,7 +20,7 @@ class pveControl:
         joint_name - string with the name of the joint as described in urdf model
         controller_type - position, velocity or effort
         """
-        assert(controller_type in ['position', 'velocity', 'effort'])
+        assert (controller_type in ['position', 'velocity', 'effort'])
         rospy.Subscriber(joint_name + '_' + controller_type + '_controller/command',
                          Float64, self.pve_controlCB, queue_size=1)
         self.cmd = 0.0
@@ -49,6 +51,7 @@ class pveControl:
     def get_joint_index(self):
         """method used to retrieve the joint int index that this class points to"""
         return self.joint_index
+
 
 # plugin is implemented below
 class Control:
@@ -116,12 +119,13 @@ class Control:
                 effort_ctrl_task = True
         # forward commands to pybullet, give priority to position control cmds, then vel, at last effort
         if position_ctrl_task:
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                     controlMode=self.pb.POSITION_CONTROL, targetPositions=self.position_joint_commands, forces=self.force_commands)
+            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot._id, jointIndices=self.joint_indices,
+                                              controlMode=self.pb.POSITION_CONTROL,
+                                              targetPositions=self.position_joint_commands, forces=self.force_commands)
         elif velocity_ctrl_task:
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                     controlMode=self.pb.VELOCITY_CONTROL, targetVelocities=self.velocity_joint_commands, forces=self.force_commands)
+            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot._id, jointIndices=self.joint_indices,
+                                              controlMode=self.pb.VELOCITY_CONTROL,
+                                              targetVelocities=self.velocity_joint_commands, forces=self.force_commands)
         elif effort_ctrl_task:
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                     controlMode=self.pb.TORQUE_CONTROL, forces=self.effort_joint_commands)
-        
+            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot._id, jointIndices=self.joint_indices,
+                                              controlMode=self.pb.TORQUE_CONTROL, forces=self.effort_joint_commands)

@@ -1,68 +1,81 @@
 #!/usr/bin/env python3
 
-"""
-position, velocity and effort control for all revolute joints on the robot
-"""
-
 import rospy
 from std_msgs.msg import Float64MultiArray
 
-# NOTE: 2 classes are implemented here, scroll down to the next class (Control) to see the plugin!
 
+class EffortControlInterface:
+    """
+    Effort control class to receive  commands.
 
-class effortControl:
-    """helper class to receive position, velocity or effort (pve) control commands"""
+    Available methods (for usage, see documentation at function definition):
+        - get_last_cmd
+        - new_command_available
+    """
+
     def __init__(self, nb_joints):
-        """constructor
+        """
         Assumes joint_name is unique, creates multiple subscribers to receive commands
         joint_index - stores an integer joint identifier
         joint_name - string with the name of the joint as described in urdf model
         controller_type - position, velocity or effort
         """
         rospy.Subscriber('effort_controller/command',
-                         Float64MultiArray, self.effort_controlCB, queue_size=1)
-        self.cmd = [0.0] * nb_joints
-        self.data_available = False
+                         Float64MultiArray, self._callback, queue_size=1)
+        self._cmd = [0.0] * nb_joints
+        self._data_available = False
 
-    def effort_controlCB(self, msg):
-        """position, velocity or effort callback
-        msg - the msg passed by the ROS network via topic publication
+    def _callback(self, msg):
         """
-        assert(len(msg.data) == len(self.cmd))
-        self.data_available = True
-        self.cmd = msg.data
+        Effort callback
+
+        :param msg: The message passed by ROS topics
+        :type msg: Float64MultiArray
+        """
+        if len(msg.data) == len(self._cmd):
+            self._data_available = True
+            self._cmd = msg.data
+        else:
+            rospy.logwarn("[EffortController::callback] Ignoring message, incorrect number of joints.")
 
     def get_last_cmd(self):
-        """method to fetch the last received command"""
-        self.data_available = False
-        return self.cmd
+        """
+        Get the last received command.
 
-    def get_is_data_available(self):
-        """method to retrieve flag to indicate that a command has been received"""
-        return self.data_available
+        :return: Most recently received command
+        :rtype: list of float
+        """
+        self._data_available = False
+        return self._cmd
+
+    def new_command_available(self):
+        """
+        Get boolean that indicates if a command has been received.
+
+        :return: Bool indicating if new command is available
+        :rtype: bool
+        """
+        return self._data_available
 
 
-# plugin is implemented below
 class EffortControl:
+    """
+    Effort control plugin.
+    """
+
     def __init__(self, pybullet, robot, **kargs):
-        # get "import pybullet as pb" and store in self.pb
-        self.pb = pybullet
-        # get robot from parent class
-        self.robot = robot
-        # get joints names and store them in dictionary, combine both revolute and prismatic dic
-        joint_index_name_dic = {**kargs['rev_joints'], **kargs['prism_joints']}
-        self.joint_indices = []
-        for joint_index in joint_index_name_dic:
-            self.joint_indices.append(joint_index)
-        self.nb_joints = len(self.joint_indices)
-        # setup subscribers
-        self.ec_subscriber = effortControl(self.nb_joints)
+        self._robot = robot
+        self.subscriber = EffortControlInterface(self._robot.get_nb_movable_joints())
+        self._robot.set_joint_velocities_cmd([0] * self._robot.get_nb_movable_joints(), effort=0)
 
     def execute(self):
-        """this function gets called from pybullet ros main update loop"""
-        """check if user has commanded a joint and forward the request to pybullet"""
-        # flag to indicate there are pending position control tasks
-        if self.ec_subscriber.get_is_data_available():
-            effort_joint_command = self.ec_subscriber.get_last_cmd()
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                              controlMode=self.pb.VELOCITY_CONTROL, forces=effort_joint_command)
+        """
+        This function gets called from PyBulletROSWrapper main update loop.
+        Check if user has sent a new command and apply it on the robot.
+        """
+        if self.subscriber.new_command_available():
+            effort_joint_command = self.subscriber.get_last_cmd()
+        else:
+            effort_joint_command = [0] * self._robot.get_nb_movable_joints()
+        # self._robot.set_joint_torques_cmd(effort_joint_command, compensate_gravity=True)
+        self._robot.set_joint_velocities_cmd(effort_joint_command, effort=500)
