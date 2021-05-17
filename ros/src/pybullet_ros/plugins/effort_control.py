@@ -15,7 +15,7 @@ class EffortControlInterface:
 
     def __init__(self, nb_joints):
         """
-        Assumes joint_name is unique, creates multiple subscribers to receive commands
+        Assumes joint_name is unique, creates subscriber to receive command
         joint_index - stores an integer joint identifier
         joint_name - string with the name of the joint as described in urdf model
         controller_type - position, velocity or effort
@@ -33,8 +33,8 @@ class EffortControlInterface:
         :type msg: Float64MultiArray
         """
         if len(msg.data) == len(self._cmd):
-            self._data_available = True
             self._cmd = list(msg.data)
+            self._data_available = True
         else:
             rospy.logwarn("[EffortController::callback] Ignoring message, incorrect number of joints.")
 
@@ -65,7 +65,7 @@ class EffortControl:
 
     def __init__(self, pybullet, robot, **kargs):
         self._robot = robot
-        self.subscriber = EffortControlInterface(self._robot.get_nb_movable_joints())
+        self._subscriber = EffortControlInterface(self._robot.get_nb_movable_joints())
         self._robot.set_joint_velocities_cmd([0] * self._robot.get_nb_movable_joints(), effort=0)
 
     def execute(self):
@@ -73,9 +73,8 @@ class EffortControl:
         This function gets called from PyBulletROSWrapper main update loop.
         Check if user has sent a new command and apply it on the robot.
         """
-        if self.subscriber.new_command_available():
-            effort_joint_command = self.subscriber.get_last_cmd()
+        if self._subscriber.new_command_available():
+            effort_joint_command = self._subscriber.get_last_cmd()
         else:
             effort_joint_command = [0] * self._robot.get_nb_movable_joints()
-        # self._robot.set_joint_torques_cmd(effort_joint_command, compensate_gravity=True)
-        self._robot.set_joint_velocities_cmd(effort_joint_command, effort=500)
+        self._robot.set_joint_torques_cmd(effort_joint_command, compensate_gravity=True)

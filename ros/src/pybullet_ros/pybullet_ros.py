@@ -32,7 +32,8 @@ class PyBulletROSWrapper(object):
 
         urdf_path = self.get_urdf_path()
         fixed_base = rospy.get_param("~fixed_base", True)
-        self.robot = Robot(urdf_path, self.simulation.uid, fixed_base, flags=pb.URDF_USE_SELF_COLLISION)
+        # self.robot = Robot(urdf_path, self.simulation.uid, fixed_base, flags=pb.URDF_USE_SELF_COLLISION)
+        self.robot = Robot(urdf_path, self.simulation.uid, fixed_base)
 
         robot_pose_x = rospy.get_param("~robot_pose_x", 0.0)
         robot_pose_y = rospy.get_param("~robot_pose_y", 0.0)
