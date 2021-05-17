@@ -4,9 +4,9 @@ import rospy
 from std_msgs.msg import Float64MultiArray
 
 
-class EffortControlInterface:
+class VelocityControlInterface:
     """
-    Effort control class to receive  commands.
+    Velocity control class to receive  commands.
 
     Available methods (for usage, see documentation at function definition):
         - get_last_cmd
@@ -20,7 +20,7 @@ class EffortControlInterface:
         joint_name - string with the name of the joint as described in urdf model
         controller_type - position, velocity or effort
         """
-        rospy.Subscriber('effort_controller/command',
+        rospy.Subscriber('velocity_controller/command',
                          Float64MultiArray, self._callback, queue_size=1)
         self._cmd = [0.0] * nb_joints
         self._data_available = False
@@ -36,7 +36,7 @@ class EffortControlInterface:
             self._data_available = True
             self._cmd = list(msg.data)
         else:
-            rospy.logwarn("[EffortController::callback] Ignoring message, incorrect number of joints.")
+            rospy.logwarn("[VelocityController::callback] Ignoring message, incorrect number of joints.")
 
     def get_last_cmd(self):
         """
@@ -58,15 +58,15 @@ class EffortControlInterface:
         return self._data_available
 
 
-class EffortControl:
+class VelocityControl:
     """
     Effort control plugin.
     """
 
     def __init__(self, pybullet, robot, **kargs):
         self._robot = robot
-        self.subscriber = EffortControlInterface(self._robot.get_nb_movable_joints())
-        self._robot.set_joint_velocities_cmd([0] * self._robot.get_nb_movable_joints(), effort=0)
+        self.subscriber = VelocityControlInterface(self._robot.get_nb_movable_joints())
+        self._robot.set_joint_velocities_cmd([0] * self._robot.get_nb_movable_joints(), effort=100)
 
     def execute(self):
         """
@@ -74,8 +74,7 @@ class EffortControl:
         Check if user has sent a new command and apply it on the robot.
         """
         if self.subscriber.new_command_available():
-            effort_joint_command = self.subscriber.get_last_cmd()
+            velocity_joint_command = self.subscriber.get_last_cmd()
         else:
-            effort_joint_command = [0] * self._robot.get_nb_movable_joints()
-        # self._robot.set_joint_torques_cmd(effort_joint_command, compensate_gravity=True)
-        self._robot.set_joint_velocities_cmd(effort_joint_command, effort=500)
+            velocity_joint_command = [0] * self._robot.get_nb_movable_joints()
+        self._robot.set_joint_velocities_cmd(velocity_joint_command, effort=100)
