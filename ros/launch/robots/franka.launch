@@ -4,22 +4,22 @@
     <!-- Parameterized sample launch file to bringup a robot with pybullet ros wrapper in a ROS ecosystem
          It launches by default a sample R2D2 robot -->
 
-    <arg name="config_file" default="$(find pybullet_ros)/ros/config/pybullet_params_example.yaml"/>
+    <arg name="config_file" default="franka_config.yaml"/>
     <!-- e.g. from my_ros_pkg.my_env import Environment ; "my_env" is what you set in environment param below-->
     <arg name="plugin_import_prefix" default="pybullet_ros.plugins"/>
     <arg name="environment" default="environment"/> <!-- name of python file without the .py inside plugins folder -->
     <arg name="pybullet_gui" default="True"/>
     <arg name="gui_options" default=""/>
-    <arg name="rviz_bringup" default="False"/>
-    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
-    <arg name="robot_urdf_path" default="$(find pybullet_ros)/common/test/urdf/r2d2_robot/r2d2.urdf.xacro"/>
+    <arg name="rviz_bringup" default="True"/>
+    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/franka.rviz"/>
+    <arg name="robot_urdf_path" default="$(find franka_panda_description)/robots/panda_arm.urdf.xacro"/>
     <arg name="pause_simulation" default="False"/>
     <arg name="parallel_plugin_execution" default="True"/>
     <arg name="robot_pose_x" default="0.0"/>
     <arg name="robot_pose_y" default="0.0"/>
-    <arg name="robot_pose_z" default="0.7"/>
+    <arg name="robot_pose_z" default="0.0"/>
     <arg name="robot_pose_yaw" default="0.0"/>
-    <arg name="fixed_base" default="False"/>
+    <arg name="fixed_base" default="True"/>
     <arg name="use_deformable_world" default="False"/> <!-- enable/disable soft body simulation -->
 
 
