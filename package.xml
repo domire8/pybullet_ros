@@ -13,6 +13,7 @@
 
     <buildtool_depend>catkin</buildtool_depend>
     <run_depend>std_msgs</run_depend>
+    <run_depend>franka_panda_description</run_depend>
     <run_depend>cv_bridge</run_depend>
     <run_depend>joint_state_publisher_gui</run_depend>
 

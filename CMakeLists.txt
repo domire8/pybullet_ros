@@ -3,6 +3,7 @@ project(pybullet_ros)
 
 find_package(catkin REQUIRED COMPONENTS
     std_msgs
+    franka_panda_description
     cv_bridge
 )
 
