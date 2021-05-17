@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     libgl1-mesa-glx \
     sudo git nano \
+    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,12 +19,7 @@ RUN git clone https://github.com/bulletphysics/bullet3
 RUN cd bullet3 && ./build_cmake_pybullet_double.sh
 ENV PYTHONPATH="/bullet3/build_cmake/examples/pybullet":"${PYTHONPATH}"
 
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-FROM project-sources AS ros-user
+FROM project-sources AS ros-ws
 
 ARG UID=1000
 ARG GID=1000
@@ -42,15 +38,28 @@ RUN mkdir -p ~/ros_ws/src
 
 RUN cd ~/ros_ws/src && /bin/bash -c "source /ros_entrypoint.sh; catkin_init_workspace"
 WORKDIR ${HOME}/ros_ws/src
-#RUN git clone https://github.com/frankaemika/franka_ros.git && mv franka_ros/franka_description ./franka_description \
-#    && rm -r franka_ros
-COPY --chown=ros . ./pybullet_ros/
-RUN rm -rf ./pybullet_ros/docker ./pybullet_ros/Dockerfile
 RUN cd ${HOME}/ros_ws && /bin/bash -c "source /ros_entrypoint.sh; catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
 
 # Change .bashrc
 COPY docker/update_bashrc /sbin/update_bashrc
 RUN sudo chmod +x /sbin/update_bashrc ; sudo chown ros /sbin/update_bashrc ; sync ; /bin/bash -c /sbin/update_bashrc ; sudo rm /sbin/update_bashrc
+
+# ros user with everything pre-built
+FROM ros-ws AS ros-user
+
+COPY --chown=ros . ./pybullet_ros/
+RUN rm -rf ./pybullet_ros/docker ./pybullet_ros/common ./pybullet_ros/Dockerfile ./pybullet_ros/requirements.txt
+RUN cd ${HOME}/ros_ws && /bin/bash -c "source /ros_entrypoint.sh; catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
+
+# Change entrypoint to source ~/.bashrc and start in ~
+COPY docker/ros_entrypoint.sh /ros_entrypoint.sh
+RUN sudo chmod +x /ros_entrypoint.sh ; sudo chown ros /ros_entrypoint.sh ;
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
+
+# dev user to be used with shared volume
+FROM ros-ws AS dev-user
 
 # Change entrypoint to source ~/.bashrc and start in ~
 COPY docker/ros_entrypoint.sh /ros_entrypoint.sh

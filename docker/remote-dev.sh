@@ -3,7 +3,7 @@
 # change to true if using nvidia graphic cards
 USE_NVIDIA_TOOLKIT=false
 
-MULTISTAGE_TARGET="ros-user"
+MULTISTAGE_TARGET="dev-user"
 
 path=$(echo "${PWD}" | rev | cut -d'/' -f-2 | rev)
 if [ "${path}" != "pybullet_ros/docker" ]; then
@@ -42,6 +42,12 @@ DOCKER_BUILDKIT=1 docker build "${BUILD_FLAGS[@]}" .. || exit
 
 [[ ${USE_NVIDIA_TOOLKIT} = true ]] && GPU_FLAG="--gpus all" || GPU_FLAG=""
 
+docker volume create --driver local \
+    --opt type="none" \
+    --opt device="${PWD}/../" \
+    --opt o="bind" \
+    "${IMAGE_NAME}_ros_pkg_vol"
+
 xhost +
 docker run \
   ${GPU_FLAG} \
@@ -49,6 +55,7 @@ docker run \
   -it \
   --rm \
   --net="host" \
+  --volume="${IMAGE_NAME}_ros_pkg_vol:/home/ros/ros_ws/src/pybullet_ros" \
   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
   --volume="${XAUTH}:${XAUTH}" \
   --env XAUTHORITY="${XAUTH}" \
