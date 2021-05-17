@@ -38,6 +38,7 @@ RUN mkdir -p ~/ros_ws/src
 
 RUN cd ~/ros_ws/src && /bin/bash -c "source /ros_entrypoint.sh; catkin_init_workspace"
 WORKDIR ${HOME}/ros_ws/src
+RUN git clone https://github.com/justagist/franka_panda_description.git
 RUN cd ${HOME}/ros_ws && /bin/bash -c "source /ros_entrypoint.sh; catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
 
 # Change .bashrc

@@ -17,18 +17,35 @@ Missing:
 - sensors: Depth information (pointcloud)
 - [sdf](http://sdformat.org) support
 
-Main implementation is done [here](https://github.com/oscar-lima/pybullet_ros/blob/noetic/ros/src/pybullet_ros/pybullet_ros.py)
+Main implementation is
+done [here](https://github.com/oscar-lima/pybullet_ros/blob/noetic/ros/src/pybullet_ros/pybullet_ros.py)
 
-## Installation
+## Install with Docker
 
-The following instructions have been tested under ubuntu 20.04 and [ROS noetic](http://wiki.ros.org/noetic/Installation/Ubuntu).
+To run the simulation with Docker, build and run the image with
+
+```bash
+cd pybullet_ros/docker
+bash build-run.sh
+```
+
+If using NVidia GPUs, make sure to set the flag `USE_NVIDIA_TOOLKIT` to true before running the script.
+
+Developpers can optionally use the `remote-dev.sh` script, which will set up a container with a shared volume to this
+directory.
+
+## Local installation
+
+The following instructions have been tested under ubuntu 20.04
+and [ROS noetic](http://wiki.ros.org/noetic/Installation/Ubuntu).
 
 This wrapper requires that you have pybullet installed, you can do so by executing:
 
         sudo -H pip3 install pybullet
 
-Additionally clone this repository inside your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace),
-compile (catkin build) and source your devel workspace (as you would normally do with any ROS pkg).
+Additionally clone this repository inside
+your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace), compile (catkin build) and source your
+devel workspace (as you would normally do with any ROS pkg).
 
 In case you need to simulate RGBD sensor then install opencv for python3 and ros cv bridge:
 
@@ -37,7 +54,8 @@ In case you need to simulate RGBD sensor then install opencv for python3 and ros
 
 ## Test the simulator
 
-We provide with 2 robots for testing purposes: acrobat and r2d2, they can be found [here](https://github.com/oscar-lima/pybullet_ros/tree/noetic/common/test/urdf).
+We provide with 2 robots for testing purposes: acrobat and r2d2, they can be
+found [here](https://github.com/oscar-lima/pybullet_ros/tree/noetic/common/test/urdf).
 
 ### Bringup r2d2 robot
 
@@ -85,13 +103,15 @@ Done. The robot should now move in velocity or effort control mode with the desi
 
 A convenient configuration file is provided for the visualization of the example robot, run it with:
 
-        rosrun rviz rviz --display-config `rospack find pybullet_ros`/ros/config/pybullet_config.rviz
+        rosrun rviz rviz --display-config `rospack find pybullet_ros`/ros/config/rviz/pybullet_config.rviz
+
+RViz can also be automatically started when launching the simulation wit the `rviz_bringup` argument set to `True`.
 
 ## Topics you can use to interact with this node
 
 ```/joint_states``` (sensor_msgs/JointState) this topic is published at the ```pybullet_ros/loop_rate```
-parameter frequency (see parameters section for more detail).
-This topic gets listened by the robot state publisher which in turn publishes tf data to the ROS ecosystem.
+parameter frequency (see parameters section for more detail). This topic gets listened by the robot state publisher
+which in turn publishes tf data to the ROS ecosystem.
 
 ```/tf``` - This wrapper broadcats all robot transformations to tf, using the robot state publisher and custom plugins.
 
@@ -99,17 +119,19 @@ This topic gets listened by the robot state publisher which in turn publishes tf
 
 ```/odom``` - Using the odometry plugin, robot body odometry gets published (nav_msgs/Odometry).
 
-```/cmd_vel``` - Using the body_vel_control plugin, the robot will subscribe to cmd_vel and exert the desired velocity to the robot.
+```/cmd_vel``` - Using the body_vel_control plugin, the robot will subscribe to cmd_vel and exert the desired velocity
+to the robot.
 
 ```<joint_name>_<xtype>_controller/command``` - replace "joint_name" with actual joint name and "xtype"
-with [position, velocity, effort] - Using the control plugin, you can publish a joint command on this topic
-and the robot will forward the instruction to the robot joint.
+with [position, velocity, effort] - Using the control plugin, you can publish a joint command on this topic and the
+robot will forward the instruction to the robot joint.
 
 ```/rgb_image``` - The camera image of type (sensor_msgs/Image)
 
 ## Services offered by this node
 
-reset simulation, of type std_srvs/Empty, which means it takes no arguments as input, it calls pybullet.resetSimulation() method.
+reset simulation, of type std_srvs/Empty, which means it takes no arguments as input, it calls
+pybullet.resetSimulation() method.
 
         rosservice call /pybullet_ros/reset_simulation
 
@@ -134,12 +156,14 @@ The following parameters can be used to customize the behavior of the simulator.
 
 ```~gravity``` - The desired value of gravity for your simulation physics engine, default : -9.81
 
-```~max_effort``` - The max effort (torque) to apply to the joint while in position or velocity control mode, default: 100.0
-                    NOTE: max_effort parameter is ignored when effort commands are given.
+```~max_effort``` - The max effort (torque) to apply to the joint while in position or velocity control mode, default:
+100.0 NOTE: max_effort parameter is ignored when effort commands are given.
 
-```~max_effort_vel_mode``` - Deprecated parameter, use max_effort instead, backwards compatibility is provided, however please change your code asap
+```~max_effort_vel_mode``` - Deprecated parameter, use max_effort instead, backwards compatibility is provided, however
+please change your code asap
 
-```~use_intertia_from_file``` - If True pybullet will compute the inertia tensor based on mass and volume of the collision shape, default: False
+```~use_intertia_from_file``` - If True pybullet will compute the inertia tensor based on mass and volume of the
+collision shape, default: False
 
 ```~robot_pose_x``` - The position where to spawn the robot in the world in m, default: 0.0
 
@@ -149,19 +173,23 @@ The following parameters can be used to customize the behavior of the simulator.
 
 ```~robot_pose_yaw``` - The orientation where to spawn the robot in the world, default: 0.0
 
-```~fixed_base``` - If true, the first link of the robot will be fixed to the center of the world, useful for non movable robots default: False
+```~fixed_base``` - If true, the first link of the robot will be fixed to the center of the world, useful for non
+movable robots default: False
 
 ```~use_deformable_world``` - Set this paramter to true in case you require soft body simulation, default: False
 
-```~environment``` - The name of the python file (has to be placed inside plugins folder) without the .py extension that implements the necessary
-                     custom functions to load an environment via python code, e.g using functions like self.pb.loadURDF(...)
-                     See "environment" section below for more details.
+```~environment``` - The name of the python file (has to be placed inside plugins folder) without the .py extension that
+implements the necessary custom functions to load an environment via python code, e.g using functions like
+self.pb.loadURDF(...)
+See "environment" section below for more details.
 
-```~plugin_import_prefix``` - Allow environment plugins located in external packages to be recognized by pybullet ros. The line executed would look like this:
-                              from my_external_ros_pkg.<my environment param (from above)> import Environment # default: pybullet_ros.plugins
+```~plugin_import_prefix``` - Allow environment plugins located in external packages to be recognized by pybullet ros.
+The line executed would look like this:
+from my_external_ros_pkg.<my environment param (from above)> import Environment # default: pybullet_ros.plugins
 
-```~gui_options``` - Expose gui options to the user, for example to be able to maximize screen -> options="--width=2560 --height=1440".
-                    The line of code in pybullet for the presented example would look like this: ```physicsClient = p.connect(p.GUI, options="--width=2560 --height=1440")```
+```~gui_options``` - Expose gui options to the user, for example to be able to maximize screen -> options="--width=2560
+--height=1440". The line of code in pybullet for the presented example would look like
+this: ```physicsClient = p.connect(p.GUI, options="--width=2560 --height=1440")```
 
 # pybullet ros plugins
 
@@ -171,24 +199,27 @@ At the core of pybullet ros, we have the following workflow:
 
 <img src="https://github.com/oscar-lima/pybullet_ros/blob/noetic/common/images/main_loop.png" alt="drawing" width="200"/>
 
-Basically we iterate over all registered plugins, run their execute function, and after doing it for all plugins we step the simulation one time step.
+Basically we iterate over all registered plugins, run their execute function, and after doing it for all plugins we step
+the simulation one time step.
 
 # Plugin creation
 
 This section shows you how you can create your own plugin, to extend this library with your own needs.
 
 NOTE: Before creating a pybullet_ros plugin, make sure your plugin does not exist already
-[check available pybullet_ros plugins here](https://github.com/oscar-lima/pybullet_ros/tree/noetic/ros/src/pybullet_ros/plugins).
+[check available pybullet_ros plugins here](https://github.com/oscar-lima/pybullet_ros/tree/noetic/ros/src/pybullet_ros/plugins)
+.
 
-To ease the process, we provide with a template [here](https://github.com/oscar-lima/pybullet_ros/blob/noetic/ros/src/pybullet_ros/plugins/plugin_template.py).
+To ease the process, we provide with a
+template [here](https://github.com/oscar-lima/pybullet_ros/blob/noetic/ros/src/pybullet_ros/plugins/plugin_template.py).
 
 Copy the template and follow this instructions:
 
 1. roscd pybullet_ros/ros/src/pybullet_ros/plugins && cp plugin_template.py my_awesome_plugin.py
 
-2. add it  to param server
+2. add it to param server
 
-    roscd pybullet_ros/ros/config && gedit pybullet_params_example.yaml
+   roscd pybullet_ros/ros/config && gedit pybullet_params_example.yaml
 
 Extend "plugins" param to add yours, e.g:
 
@@ -206,8 +237,9 @@ Extend "plugins" param to add yours, e.g:
         import pybullet as pb -> self.pb
         self.robot -> self.pb.loadURDF(urdf_path, basePosition=[0,0,0], baseOrientation=[0,0,0,1], ...)
 
-Using the pybullet [documentation](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#) you should be able
-to access all the functionality that the pybullet api provides.
+Using the
+pybullet [documentation](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#) you
+should be able to access all the functionality that the pybullet api provides.
 
 # Environment plugin
 
@@ -215,15 +247,19 @@ To load an environment (URDF, SDF, etc) we provide with a particular one time pl
 
 This is loaded during runtime via importlib based upon the value of the ```~environment``` parameter.
 
-The recommended way is to set the "environment" parameter to point to a python file which has to be placed under "plugins" folder (just as any other plugin).
+The recommended way is to set the "environment" parameter to point to a python file which has to be placed under "
+plugins" folder (just as any other plugin).
 
-Then set the environment parameter to be a string with the name of your python file, e.g. ```my_env.py``` but without the .py, therefore only : ```my_env```.
+Then set the environment parameter to be a string with the name of your python file, e.g. ```my_env.py``` but without
+the .py, therefore only : ```my_env```.
 
-Then inside my_env.py inherit from Environment class provided in plugins/environment.py and override the ```load_environment_via_code``` method.
+Then inside my_env.py inherit from Environment class provided in plugins/environment.py and override
+the ```load_environment_via_code``` method.
 
 A template is provided under plugins/environment_template.py to ease the process.
 
-As mentioned before, the code inside the method "load_environment_via_code" will be called one time only during puybullet startup sequence.
+As mentioned before, the code inside the method "load_environment_via_code" will be called one time only during
+puybullet startup sequence.
 
 ## NOTE about the multiple r2d2 urdf models in the web
 
@@ -231,13 +267,19 @@ As you might have already noticed, there are multiple r2d2 urdf models in the we
 ROS [uses](http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch) to
 teach new users about URDF, however is missing collision and inertia tags. Another one can be found under pybullet repo
 [data folder](https://github.com/bulletphysics/bullet3/blob/master/data/r2d2.urdf) but that model does not follow
-[ROS conventions](https://www.ros.org/reps/rep-0103.html#axis-orientation), in particular "x" axis moves the robot forward and "y" axis moves it to the left.
-We have created our own r2d2 and included a lidar on its base to be able to test the laser scanner plugin.
+[ROS conventions](https://www.ros.org/reps/rep-0103.html#axis-orientation), in particular "x" axis moves the robot
+forward and "y" axis moves it to the left. We have created our own r2d2 and included a lidar on its base to be able to
+test the laser scanner plugin.
 
 ## Wait a second... bullet is already integrated in gazebo. Why do I need this repository at all?
 
-Well thats true, bullet is integrated in gazebo, they have much more plugins available and their api runs much faster as it is implemented in C++.
+Well thats true, bullet is integrated in gazebo, they have much more plugins available and their api runs much faster as
+it is implemented in C++.
 
-I myself also use gazebo on a daily basis! , however probably some reasons why this repository be useful are because is very easy and fast to configure a rapid prototype.
+I myself also use gazebo on a daily basis! , however probably some reasons why this repository be useful are because is
+very easy and fast to configure a rapid prototype.
 
-Your urdf model does not need to be extended with gazebo tags, installation is extremely easy from pypi and there are lots of examples in pybullet available (see [here](https://github.com/bulletphysics/bullet3/tree/master/examples/pybullet/examples)). Additionally, its in python! so is easier and faster to develop + the pybullet documentation is better.
+Your urdf model does not need to be extended with gazebo tags, installation is extremely easy from pypi and there are
+lots of examples in pybullet available (
+see [here](https://github.com/bulletphysics/bullet3/tree/master/examples/pybullet/examples)). Additionally, its in
+python! so is easier and faster to develop + the pybullet documentation is better.
