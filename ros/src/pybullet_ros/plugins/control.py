@@ -75,21 +75,17 @@ class Control:
         """check if user has commanded a joint and forward the request to pybullet"""
         # flag to indicate there are pending position control tasks
         control_params = {"bodyUniqueId": self.robot, "jointIndices": self.joint_indices}
-        command_available = False
         if self.pc_subscriber.get_is_data_available():
             control_params["controlMode"] = self.pb.POSITION_CONTROL
             control_params["targetPositions"] = self.pc_subscriber.get_last_cmd()
             control_params["forces"] = self.force_commands
-            command_available = True
         if self.vc_subscriber.get_is_data_available():
             control_params["controlMode"] = self.pb.VELOCITY_CONTROL
             control_params["targetVelocities"] = self.vc_subscriber.get_last_cmd()
             control_params["forces"] = self.force_commands
-            command_available = True
         if self.ec_subscriber.get_is_data_available():
             control_params["controlMode"] = self.pb.TORQUE_CONTROL
             control_params["forces"] = self.ec_subscriber.get_last_cmd()
-            command_available = True
 
-        if command_available:
+        if "controlMode" in control_params.keys():
             self.pb.setJointMotorControlArray(**control_params)
