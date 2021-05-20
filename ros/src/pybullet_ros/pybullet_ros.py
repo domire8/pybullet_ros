@@ -87,22 +87,6 @@ class pyBulletRosWrapper(object):
                 prismatic_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
         return rev_joint_index_name_dic, prismatic_joint_index_name_dic, fixed_joint_index_name_dic, link_names_to_ids_dic
 
-    def start_gui(self, gui=True):
-        """start physics engine (client) with or without gui"""
-        if gui:
-            # start simulation with gui
-            rospy.loginfo('Running pybullet with gui')
-            rospy.loginfo('-------------------------')
-            gui_options = rospy.get_param('~gui_options',
-                                          '')  # e.g. to maximize screen: options="--width=2560 --height=1440"
-            return self.pb.connect(self.pb.GUI, options=gui_options)
-        else:
-            # start simulation without gui (non-graphical version)
-            rospy.loginfo('Running pybullet without gui')
-            # hide console output from pybullet
-            rospy.loginfo('-------------------------')
-            return self.pb.connect(self.pb.DIRECT)
-
     def init_pybullet_robot(self):
         """load robot URDF model, set gravity, ground plane and environment"""
         # get from param server the path to the URDF robot model to load at startup
@@ -165,34 +149,6 @@ class pyBulletRosWrapper(object):
             lower_lim = self.pb.getJointInfo(robot, joint_id)[8]
             upper_lim = self.pb.getJointInfo(robot, joint_id)[9]
             self.pb.resetJointState(robot, joint_id, (upper_lim + lower_lim) / 2)
-
-    def handle_reset_simulation(self, req):
-        """Callback to handle the service offered by this node to reset the simulation"""
-        rospy.loginfo('reseting simulation now')
-        # pause simulation to prevent reading joint values with an empty world
-        self.pause_simulation = True
-        # remove all objects from the world and reset the world to initial conditions
-        self.pb.resetSimulation()
-        # load URDF model again, set gravity and floor
-        self.init_pybullet_robot()
-        # resume simulation control cycle now that a new robot is in place
-        self.pause_simulation = False
-        return []
-
-    def handle_pause_physics(self, req):
-        """pause simulation, raise flag to prevent pybullet to execute self.pb.stepSimulation()"""
-        rospy.loginfo('pausing simulation')
-        self.pause_simulation = False
-        return []
-
-    def handle_unpause_physics(self, req):
-        """unpause simulation, lower flag to allow pybullet to execute self.pb.stepSimulation()"""
-        rospy.loginfo('unpausing simulation')
-        self.pause_simulation = True
-        return []
-
-    def pause_simulation_function(self):
-        return self.pause_simulation
 
     def start_pybullet_ros_wrapper_sequential(self):
         """
