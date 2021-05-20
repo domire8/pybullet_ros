@@ -11,7 +11,7 @@ plugins:
   - module: pybullet_ros.plugins.joint_state_pub
     class: joinStatePub
 
-loop_rate: 1000.0            # default: 80.0, the frequency at which to step sim in hz
+loop_rate: 500.0            # default: 80.0, the frequency at which to step sim in hz
 gravity: -9.81           # default: -9.81, earth gravity in m/s^2
 max_effort: 100.0           # default: 50.0, the max force to apply to the model in vel mode
 
