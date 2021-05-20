@@ -17,11 +17,9 @@ class pveControl:
     def __init__(self, controller_type):
         """constructor
         Assumes joint_name is unique, creates multiple subscribers to receive commands
-        joint_index - stores an integer joint identifier
-        joint_name - string with the name of the joint as described in urdf model
         controller_type - position, velocity or effort
         """
-        assert (controller_type in ['position', 'velocity', 'effort'])
+        assert controller_type in ['position', 'velocity', 'effort']
         rospy.Subscriber("/" + controller_type + '_controller/command',
                          Float64MultiArray, self.pve_controlCB, queue_size=1)
         self.cmd = 0.0
@@ -76,27 +74,22 @@ class Control:
         """this function gets called from pybullet ros main update loop"""
         """check if user has commanded a joint and forward the request to pybullet"""
         # flag to indicate there are pending position control tasks
-        position_ctrl_task = False
-        velocity_ctrl_task = False
-        effort_ctrl_task = False
+        control_params = {"bodyUniqueId": self.robot, "jointIndices": self.joint_indices}
+        command_available = False
         if self.pc_subscriber.get_is_data_available():
-            self.position_joint_commands = self.pc_subscriber.get_last_cmd()
-            position_ctrl_task = True
+            control_params["controlMode"] = self.pb.POSITION_CONTROL
+            control_params["targetPositions"] = self.pc_subscriber.get_last_cmd()
+            control_params["forces"] = self.force_commands
+            command_available = True
         if self.vc_subscriber.get_is_data_available():
-            self.velocity_joint_commands = self.vc_subscriber.get_last_cmd()
-            velocity_ctrl_task = True
+            control_params["controlMode"] = self.pb.VELOCITY_CONTROL
+            control_params["targetVelocities"] = self.vc_subscriber.get_last_cmd()
+            control_params["forces"] = self.force_commands
+            command_available = True
         if self.ec_subscriber.get_is_data_available():
-            self.effort_joint_commands = self.ec_subscriber.get_last_cmd()
-            effort_ctrl_task = True
-        # forward commands to pybullet, give priority to position control cmds, then vel, at last effort
-        if position_ctrl_task:
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                              controlMode=self.pb.POSITION_CONTROL,
-                                              targetPositions=self.position_joint_commands, forces=self.force_commands)
-        elif velocity_ctrl_task:
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                              controlMode=self.pb.VELOCITY_CONTROL,
-                                              targetVelocities=self.velocity_joint_commands, forces=self.force_commands)
-        elif effort_ctrl_task:
-            self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                              controlMode=self.pb.TORQUE_CONTROL, forces=self.effort_joint_commands)
+            control_params["controlMode"] = self.pb.TORQUE_CONTROL
+            control_params["forces"] = self.ec_subscriber.get_last_cmd()
+            command_available = True
+
+        if command_available:
+            self.pb.setJointMotorControlArray(**control_params)
