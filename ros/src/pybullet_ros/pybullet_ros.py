@@ -105,7 +105,7 @@ class pyBulletRosWrapper(object):
 
     def start_gui(self, gui=True):
         """start physics engine (client) with or without gui"""
-        if (gui):
+        if gui:
             # start simulation with gui
             rospy.loginfo('Running pybullet with gui')
             rospy.loginfo('-------------------------')
@@ -180,7 +180,6 @@ class pyBulletRosWrapper(object):
         for joint_id, joint_name in joint_dict.items():
             lower_lim = self.pb.getJointInfo(robot, joint_id)[8]
             upper_lim = self.pb.getJointInfo(robot, joint_id)[9]
-            print(-(upper_lim - lower_lim) / 2)
             self.pb.resetJointState(robot, joint_id, (upper_lim + lower_lim) / 2)
 
     def handle_reset_simulation(self, req):
