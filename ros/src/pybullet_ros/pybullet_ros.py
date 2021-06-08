@@ -171,6 +171,7 @@ class pyBulletRosWrapper(object):
         self.pb.setRealTimeSimulation(0)  # NOTE: does not currently work with effort controller, thats why is left as 0
         rospy.loginfo('loading urdf model: ' + urdf_path)
         # NOTE: self collision enabled by default
+        # self.pb.setAdditionalSearchPath('/home/ros/ros_ws/src/staubli_experimental/staubli_tx2_90_support')
         return self.pb.loadURDF(urdf_path, basePosition=[robot_pose_x, robot_pose_y, robot_pose_z],
                                 baseOrientation=robot_spawn_orientation,
                                 useFixedBase=fixed_base, flags=urdf_flags)

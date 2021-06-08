@@ -16,5 +16,6 @@
     <run_depend>franka_panda_description</run_depend>
     <run_depend>cv_bridge</run_depend>
     <run_depend>joint_state_publisher_gui</run_depend>
+    <run_depend>staubli_tx2_90_support</run_depend>
 
 </package>

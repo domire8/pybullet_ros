@@ -39,6 +39,9 @@ RUN mkdir -p ~/ros_ws/src
 RUN cd ~/ros_ws/src && /bin/bash -c "source /ros_entrypoint.sh; catkin_init_workspace"
 WORKDIR ${HOME}/ros_ws/src
 RUN git clone https://github.com/justagist/franka_panda_description.git
+RUN git clone https://github.com/ros-industrial/staubli.git && mv staubli/staubli_resources ./staubli_resources && rm -r staubli
+RUN /bin/bash -c "echo hello1"
+RUN git clone https://github.com/domire8/staubli_experimental.git && cd staubli_experimental && git checkout feature/schunk
 RUN cd ${HOME}/ros_ws && /bin/bash -c "source /ros_entrypoint.sh; catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
 
 # Change .bashrc
