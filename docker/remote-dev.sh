@@ -57,7 +57,7 @@ docker run \
   --net="host" \
   --volume="${IMAGE_NAME}_ros_pkg_vol:/home/ros/ros_ws/src/pybullet_ros" \
   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-  --volume="${XAUTH}:${XAUTH}" \
-  --env XAUTHORITY="${XAUTH}" \
+  --volume="${XAUTHORITY}:${XAUTHORITY}" \
+  --env XAUTHORITY="${XAUTHORITY}" \
   --env DISPLAY="${DISPLAY}" \
   "${IMAGE_NAME}:${MULTISTAGE_TARGET}"
