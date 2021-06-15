@@ -13,7 +13,7 @@
     <arg name="rviz_bringup" default="False"/>
     <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
     <arg name="robot_urdf_path" default="$(find pybullet_ros)/common/test/urdf/r2d2_robot/r2d2.urdf.xacro"/>
-    <arg name="pause_simulation" default="False"/>
+    <arg name="start_paused" default="False"/>
     <arg name="parallel_plugin_execution" default="True"/>
     <arg name="robot_pose_x" default="0.0"/>
     <arg name="robot_pose_y" default="0.0"/>
@@ -40,7 +40,7 @@
         <arg name="rviz_bringup" value="$(arg rviz_bringup)"/>
         <arg name="rviz_config" value="$(arg rviz_config)"/>
         <arg name="robot_urdf_path" value="$(arg robot_urdf_path)"/>
-        <arg name="pause_simulation" value="$(arg pause_simulation)"/>
+        <arg name="start_paused" value="$(arg start_paused)"/>
         <arg name="parallel_plugin_execution" value="$(arg parallel_plugin_execution)"/>
         <arg name="robot_pose_x" value="$(arg robot_pose_x)"/>
         <arg name="robot_pose_y" value="$(arg robot_pose_y)"/>

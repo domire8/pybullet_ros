@@ -3,10 +3,10 @@
 import importlib
 import os
 
-import pybullet_data
 import rospy
 from pybullet_ros.function_exec_manager import FuncExecManager
-from std_srvs.srv import Empty
+
+from .pybullet_sim import PyBulletSim
 
 
 class pyBulletRosWrapper(object):
@@ -18,19 +18,9 @@ class pyBulletRosWrapper(object):
         # get from param server the frequency at which to run the simulation
         self.loop_rate = rospy.get_param('~loop_rate', 80.0)
         # query from param server if gui is needed
-        is_gui_needed = rospy.get_param('~pybullet_gui', True)
-        # get from param server if user wants to pause simulation at startup
-        self.pause_simulation = rospy.get_param('~pause_simulation', False)
-        print('\033[34m')
-        # print pybullet stuff in blue
-        physicsClient = self.start_gui(gui=is_gui_needed)  # we dont need to store the physics client for now...
-        # setup service to restart simulation
-        rospy.Service('~reset_simulation', Empty, self.handle_reset_simulation)
-        # setup services for pausing/unpausing simulation
-        rospy.Service('~pause_physics', Empty, self.handle_pause_physics)
-        rospy.Service('~unpause_physics', Empty, self.handle_unpause_physics)
-        # get pybullet path in your system and store it internally for future use, e.g. to set floor
-        self.pb.setAdditionalSearchPath(pybullet_data.getDataPath())
+        start_pybullet_gui = rospy.get_param("~pybullet_gui", True)
+        start_paused = rospy.get_param("~start_paused", False)
+        self.simulation = PyBulletSim(gui=start_pybullet_gui, start_paused=start_paused)
         # create object of environment class for later use
         env_plugin = rospy.get_param('~environment', 'environment')  # default : plugins/environment.py
         plugin_import_prefix = rospy.get_param('~plugin_import_prefix', 'pybullet_ros.plugins')
@@ -97,28 +87,6 @@ class pyBulletRosWrapper(object):
                 prismatic_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
         return rev_joint_index_name_dic, prismatic_joint_index_name_dic, fixed_joint_index_name_dic, link_names_to_ids_dic
 
-    def handle_reset_simulation(self, req):
-        """Callback to handle the service offered by this node to reset the simulation"""
-        rospy.loginfo('reseting simulation now')
-        self.pb.resetSimulation()
-        return Empty()
-
-    def start_gui(self, gui=True):
-        """start physics engine (client) with or without gui"""
-        if gui:
-            # start simulation with gui
-            rospy.loginfo('Running pybullet with gui')
-            rospy.loginfo('-------------------------')
-            gui_options = rospy.get_param('~gui_options',
-                                          '')  # e.g. to maximize screen: options="--width=2560 --height=1440"
-            return self.pb.connect(self.pb.GUI, options=gui_options)
-        else:
-            # start simulation without gui (non-graphical version)
-            rospy.loginfo('Running pybullet without gui')
-            # hide console output from pybullet
-            rospy.loginfo('-------------------------')
-            return self.pb.connect(self.pb.DIRECT)
-
     def init_pybullet_robot(self):
         """load robot URDF model, set gravity, ground plane and environment"""
         # get from param server the path to the URDF robot model to load at startup
@@ -182,69 +150,38 @@ class pyBulletRosWrapper(object):
             upper_lim = self.pb.getJointInfo(robot, joint_id)[9]
             self.pb.resetJointState(robot, joint_id, (upper_lim + lower_lim) / 2)
 
-    def handle_reset_simulation(self, req):
-        """Callback to handle the service offered by this node to reset the simulation"""
-        rospy.loginfo('reseting simulation now')
-        # pause simulation to prevent reading joint values with an empty world
-        self.pause_simulation = True
-        # remove all objects from the world and reset the world to initial conditions
-        self.pb.resetSimulation()
-        # load URDF model again, set gravity and floor
-        self.init_pybullet_robot()
-        # resume simulation control cycle now that a new robot is in place
-        self.pause_simulation = False
-        return []
-
-    def handle_pause_physics(self, req):
-        """pause simulation, raise flag to prevent pybullet to execute self.pb.stepSimulation()"""
-        rospy.loginfo('pausing simulation')
-        self.pause_simulation = False
-        return []
-
-    def handle_unpause_physics(self, req):
-        """unpause simulation, lower flag to allow pybullet to execute self.pb.stepSimulation()"""
-        rospy.loginfo('unpausing simulation')
-        self.pause_simulation = True
-        return []
-
-    def pause_simulation_function(self):
-        return self.pause_simulation
-
     def start_pybullet_ros_wrapper_sequential(self):
         """
         This function is deprecated, we recommend the use of parallel plugin execution
         """
         rate = rospy.Rate(self.loop_rate)
         while not rospy.is_shutdown():
-            if not self.pause_simulation:
+            if not self.simulation.is_paused():
                 # run x plugins
                 for task in self.plugins:
                     task.execute()
                 # perform all the actions in a single forward dynamics simulation step such
                 # as collision detection, constraint solving and integration
-                self.pb.stepSimulation()
+                self.simulation.step()
             rate.sleep()
-        rospy.logwarn('killing node now...')
-        # if node is killed, disconnect
-        if self.connected_to_physics_server:
-            self.pb.disconnect()
+        rospy.logwarn("[PyBulletROSWrapper] Killing all programs now.")
+        if self.simulation.is_alive():
+            del self.simulation
 
     def start_pybullet_ros_wrapper_parallel(self):
         """
         Execute plugins in parallel, however watch their execution time and warn if exceeds the deadline (loop rate)
         """
         # create object of our parallel execution manager
-        exec_manager_obj = FuncExecManager(self.plugins, rospy.is_shutdown, self.pb.stepSimulation,
-                                           self.pause_simulation_function,
+        exec_manager_obj = FuncExecManager(self.plugins, rospy.is_shutdown, self.simulation.step,
+                                           self.simulation.is_paused,
                                            log_info=rospy.loginfo, log_warn=rospy.logwarn, log_debug=rospy.logdebug,
                                            function_name='plugin')
         # start parallel execution of all "execute" class methods in a synchronous way
         exec_manager_obj.start_synchronous_execution(loop_rate=self.loop_rate)
-        # ctrl + c was pressed, exit
-        rospy.logwarn('killing node now...')
-        # if node is killed, disconnect
-        if self.connected_to_physics_server:
-            self.pb.disconnect()
+        rospy.logwarn("[PyBulletROSWrapper] Killing all programs now.")
+        if self.simulation.is_alive():
+            del self.simulation
 
     def start_pybullet_ros_wrapper(self):
         if rospy.get_param('~parallel_plugin_execution', True):
