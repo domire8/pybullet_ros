@@ -48,7 +48,10 @@ laser:
 
 # rgb camera plugin parameters
 rgbd_camera:
-    frame_id:           box             # default: box, the name of the reference frame of the camera
-    resolution:
-        width:          640             # default: 640, horizontal image resolution in pixels
-        height:         480             # default: 480, vertical image resolution in pixels
+  frame_id: box             # default: box, the name of the reference frame of the camera
+  resolution:
+    width: 640             # default: 640, horizontal image resolution in pixels
+    height: 480             # default: 480, vertical image resolution in pixels
+
+robots:
+  - r2d2
