@@ -12,23 +12,27 @@
     <arg name="gui_options" default=""/>
     <arg name="rviz_bringup" default="False"/>
     <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
-    <arg name="robot_urdf_path" default="$(find pybullet_ros)/common/test/urdf/r2d2_robot/r2d2.urdf.xacro"/>
     <arg name="start_paused" default="False"/>
     <arg name="parallel_plugin_execution" default="True"/>
-    <arg name="robot_pose_x" default="0.0"/>
-    <arg name="robot_pose_y" default="0.0"/>
-    <arg name="robot_pose_z" default="0.7"/>
-    <arg name="robot_pose_yaw" default="0.0"/>
     <arg name="fixed_base" default="False"/>
     <arg name="use_deformable_world" default="False"/> <!-- enable/disable soft body simulation -->
 
+    <group ns="r2d2">
+        <arg name="urdf_path" default="$(find pybullet_ros)/common/test/urdf/r2d2_robot/r2d2.urdf.xacro"/>
+        <param name="urdf_path" value="$(arg urdf_path)"/>
+        <param name="pose_x" value="0.0"/>
+        <param name="pose_y" value="0.0"/>
+        <param name="pose_z" value="0.7"/>
+        <param name="pose_yaw" value="0.0"/>
+        <param name="fixed_base" value="False"/>
+        <param name="use_inertia_from_file" value="True"/>
 
-    <!-- upload urdf model to ROS param server -->
-    <param name="robot_description"
-           command="$(find xacro)/xacro $(arg robot_urdf_path)"/>
+        <!-- upload urdf model to ROS param server -->
+        <param name="robot_description" command="$(find xacro)/xacro $(arg urdf_path)"/>
 
-    <!-- robot_state_publisher, publish tf based on /joint_states topic and robot_description param -->
-    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen"/>
+        <!-- robot_state_publisher, publish tf based on /joint_states topic and robot_description param -->
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen"/>
+    </group>
 
     <!-- pybullet ros wrapper -->
     <include file="$(find pybullet_ros)/ros/launch/pybullet_ros_example.launch">
@@ -39,14 +43,8 @@
         <arg name="gui_options" value="$(arg gui_options)"/>
         <arg name="rviz_bringup" value="$(arg rviz_bringup)"/>
         <arg name="rviz_config" value="$(arg rviz_config)"/>
-        <arg name="robot_urdf_path" value="$(arg robot_urdf_path)"/>
         <arg name="start_paused" value="$(arg start_paused)"/>
         <arg name="parallel_plugin_execution" value="$(arg parallel_plugin_execution)"/>
-        <arg name="robot_pose_x" value="$(arg robot_pose_x)"/>
-        <arg name="robot_pose_y" value="$(arg robot_pose_y)"/>
-        <arg name="robot_pose_z" value="$(arg robot_pose_z)"/>
-        <arg name="robot_pose_yaw" value="$(arg robot_pose_yaw)"/>
-        <arg name="fixed_base" value="$(arg fixed_base)"/>
         <arg name="use_deformable_world" value="$(arg use_deformable_world)"/>
     </include>
 
