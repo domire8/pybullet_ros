@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <launch>
 
-    <!-- Parametrized sample launch file to run pybullet ros wrapper -->
-
     <!-- partial configuration params for pybullet_ros node, rest will be loaded from config_file -->
     <arg name="config_file" default="$(find pybullet_ros)/ros/config/pybullet_params_example.yaml"/>
     <arg name="plugin_import_prefix" default="pybullet_ros.plugins"/>
@@ -11,7 +9,7 @@
     <arg name="gui_options" default=""/>
     <arg name="rviz_bringup" default="False"/>
     <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
-    <arg name="start_paused" default="False"/> <!-- if true, will boot with paused physics -->
+    <arg name="start_paused" default="False"/> <!-- if true, will start with paused physics -->
     <arg name="parallel_plugin_execution" default="True"/>
     <arg name="use_deformable_world" default="False"/> <!-- enable/disable soft body simulation -->
 

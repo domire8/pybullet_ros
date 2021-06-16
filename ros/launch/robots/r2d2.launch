@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
 
-    <!-- Parameterized sample launch file to bringup a robot with pybullet ros wrapper in a ROS ecosystem
-         It launches by default a sample R2D2 robot -->
+    <!-- Parameterized sample launch file to bring up a robot with pybullet ros wrapper in a ROS ecosystem
+         It launches a sample R2D2 robot -->
 
     <arg name="config_file" default="$(find pybullet_ros)/ros/config/pybullet_params_example.yaml"/>
     <!-- e.g. from my_ros_pkg.my_env import Environment ; "my_env" is what you set in environment param below-->
