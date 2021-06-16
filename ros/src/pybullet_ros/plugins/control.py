@@ -14,13 +14,14 @@ from std_msgs.msg import Float64MultiArray
 class pveControl:
     """helper class to receive position, velocity or effort (pve) control commands"""
 
-    def __init__(self, controller_type):
+    def __init__(self, controller_type, namespace):
         """constructor
         Assumes joint_name is unique, creates multiple subscribers to receive commands
         controller_type - position, velocity or effort
+        namespace - namespace of the robot
         """
         assert controller_type in ['position', 'velocity', 'effort']
-        rospy.Subscriber("/" + controller_type + '_controller/command',
+        rospy.Subscriber(namespace + controller_type + '_controller/command',
                          Float64MultiArray, self.pve_controlCB, queue_size=1)
         self.cmd = 0.0
         self.data_available = False
@@ -65,10 +66,12 @@ class Control:
             max_effort = rospy.get_param('~max_effort', 100.0)
         # the max force to apply to the joint, used in velocity control
         self.force_commands = [max_effort] * len(self.joint_indices)
+
+        namespace = "/" + kargs["name"] + "/"
         # setup subscribers
-        self.pc_subscriber = pveControl('position')
-        self.vc_subscriber = pveControl('velocity')
-        self.ec_subscriber = pveControl('effort')
+        self.pc_subscriber = pveControl('position', namespace)
+        self.vc_subscriber = pveControl('velocity', namespace)
+        self.ec_subscriber = pveControl('effort', namespace)
 
     def execute(self):
         """this function gets called from pybullet ros main update loop"""
