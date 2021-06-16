@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import rospy
-from std_msgs.msg import Float64MultiArray
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64MultiArray
 
 
 class JointStatesToFloat:
-    def __init__(self):
+    def __init__(self, namespace):
         self.rate = rospy.Rate(10)
         self.msg_received = False
         self.joint_state_msg = None
@@ -18,7 +18,7 @@ class JointStatesToFloat:
         # init previous angle list
         self.previous_angles = [0] * len(self.joint_state_msg.position)
         # create one publisher
-        self.pub = rospy.Publisher('/position_controller/command', Float64MultiArray, queue_size=1)
+        self.pub = rospy.Publisher(namespace + 'position_controller/command', Float64MultiArray, queue_size=1)
 
     def wait_for_first_msg(self):
         while not self.msg_received:
@@ -55,5 +55,5 @@ class JointStatesToFloat:
 
 if __name__ == '__main__':
     rospy.init_node('joint_states_to_float', anonymous=False)
-    jstf = JointStatesToFloat()
+    jstf = JointStatesToFloat(rospy.get_namespace())
     jstf.start()
