@@ -16,7 +16,6 @@ class joinStatePub:
         self.robot = robot
         # register this node in the network as a publisher in /joint_states topic
         self.pub_joint_states = rospy.Publisher(robot.get_namespace() + "joint_states", JointState, queue_size=1)
-        print(robot.get_namespace())
 
     def execute(self):
         """this function gets called from pybullet ros main update loop"""
