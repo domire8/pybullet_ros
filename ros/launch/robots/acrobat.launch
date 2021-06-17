@@ -32,7 +32,7 @@
     </group>
 
     <!-- pybullet ros wrapper -->
-    <include file="$(find pybullet_ros)/ros/launch/pybullet_ros_example.launch">
+    <include file="$(find pybullet_ros)/ros/launch/pybullet_ros.launch">
         <arg name="config_file" value="$(arg config_file)"/>
         <arg name="plugin_import_prefix" value="$(arg plugin_import_prefix)"/>
         <arg name="environment" value="$(arg environment)"/>
