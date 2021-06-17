@@ -1,23 +1,30 @@
-import os
 import re
 
 import pybullet as pb
 import rospy
+from sensor_msgs.msg import JointState
+
+from .pybullet_robot_description import PyBulletRobotDescription
 
 
-# import quaternion
-
-
-class PyBulletRobot(object):
+class PyBulletRobot(PyBulletRobotDescription):
     """
+    PyBulletRobot extending from PyBulletRobotDescription.
+    This is a collection of methods that gather 'real-time' information about the robot state and take control over the
+    robot. In other words, these are the methods called (at each time step) in the simulation loop.
 
+    Available methods (for usage, see documentation at function definition):
+        - get_joint_state_msg
+        - get_joint_state
+        - get_link_state
+        - get_base_state
     """
 
     def __init__(self, name, uid):
         """
         Constructor of the PyBulletRobot class.
 
-        :param name: ROS namespace of the robot's parameters
+        :param name: the name of the robot
         :param uid: server id of PyBullet
 
         :type name: str
@@ -25,7 +32,6 @@ class PyBulletRobot(object):
         """
         assert isinstance(name, str), "[PyBulletRobot::init] Parameter 'name' has an incorrect type."
         assert isinstance(uid, int), "[PyBulletRobot::init] Parameter 'uid' has an incorrect type."
-        self._initialized = False
         self._uid = uid
         allowed = re.compile("[a-zA-Z0-9_]*$")
         if not allowed.match(name):
@@ -34,87 +40,79 @@ class PyBulletRobot(object):
                 "Exiting now.".format(name))
             return
         self._namespace = "/" + name + "/"
-        urdf_path = self._get_urdf_path(self._namespace)
-        if urdf_path is None:
-            return
-        # get robot spawn pose from parameter server
-        pose_x = rospy.get_param(self._namespace + "pose_x", 0.0)
-        pose_y = rospy.get_param(self._namespace + "pose_y", 0.0)
-        pose_z = rospy.get_param(self._namespace + "pose_z", 1.0)
-        pose_yaw = rospy.get_param(self._namespace + "pose_yaw", 0.0)
-        fixed_base = rospy.get_param(self._namespace + "fixed_base", False)
-        # load robot from URDF model
-        # user decides if inertia is computed automatically by pybullet or custom
-        if rospy.get_param(self._namespace + "use_inertia_from_file", False):
-            # combining several boolean flags using "or" according to pybullet documentation
-            urdf_flags = pb.URDF_USE_INERTIA_FROM_FILE | pb.URDF_USE_SELF_COLLISION
+        PyBulletRobotDescription.__init__(self, self._namespace, self._uid)
+        self._initialized = self.is_initialized()
+
+    def get_joint_state_msg(self):
+        msg = JointState()
+        msg.name = [self.get_all_joint_names()[i] for i in self.get_joint_indices()]
+        msg.position, msg.velocity, _, msg.effort = self.get_joint_state()
+        return msg
+
+    def get_joint_state(self, joint_id=None):
+        """
+        Get joint state(s) (position, velocity, force, effort).
+
+        :param joint_id: Optional parameter, if different from None, then only the joint state of the desired joint is
+                         returned (if it exists), otherwise the joint states of all joints are returned.
+        :type joint_id: int
+
+        :return: Joint positions, velocities, reaction forces, and efforts of all movable joints given by bullet physics
+        :rtype: list of float
+        """
+        if joint_id is None:
+            joint_positions = []
+            joint_velocities = []
+            joint_reaction_forces = []
+            joint_efforts = []
+
+            for idx in self.get_joint_indices():
+                joint_state = pb.getJointState(
+                    self._id, idx, physicsClientId=self._uid)
+                joint_positions.append(joint_state[0])
+                joint_velocities.append(joint_state[1])
+                joint_reaction_forces.append(joint_state[2])
+                joint_efforts.append(joint_state[3])
+            return joint_positions, joint_velocities, joint_reaction_forces, joint_efforts
+
         else:
-            urdf_flags = pb.URDF_USE_SELF_COLLISION
-        self._id = pb.loadURDF(urdf_path, basePosition=[pose_x, pose_y, pose_z],
-                               baseOrientation=pb.getQuaternionFromEuler([0.0, 0.0, pose_yaw]),
-                               useFixedBase=fixed_base, flags=urdf_flags, physicsClientId=self._uid)
-        self._initialized = True
-
-    def is_initialized(self):
-        """
-        Getter of the initialized attribute
-
-        :rtype: bool
-        """
-        return self._initialized
-
-    def get_id(self):
-        """
-        Getter of the robot ID
-
-        :rtype: int
-        """
-        return self._id
-
-    @staticmethod
-    def _get_urdf_path(namespace):
-        """
-        Get robot urdf path from parameter server and create urdf file from robot_description param, if necessary. Return None if one of the operations failed.
-
-        :param namespace: namespace of the robot parameters
-        :type namespace: str
-
-        :rtype: str
-        """
-        urdf_path = rospy.get_param(namespace + "urdf_path", None)
-        if not urdf_path:
-            rospy.logerr(
-                "[PyBulletRobot::get_urdf_path] Could not get mandatory" +
-                " parameter '{}urdf_path' from ROS param server, exiting now.".format(namespace))
-            return None
-        if not os.path.isfile(urdf_path):
-            rospy.logerr(
-                "[PyBulletRobot::get_urdf_path] parameter 'urdf_path' is set" +
-                " but file {} does not exist, exiting now.".format(urdf_path))
-            return None
-        if urdf_path[-5:] == ".urdf":
-            return urdf_path
-        elif urdf_path[-11:] == ".urdf.xacro":
-            robot_description = rospy.get_param(namespace + "robot_description", None)
-            if not robot_description:
-                rospy.logerr(
-                    "[PyBulletRobot::get_urdf_path] Could not get mandatory" +
-                    " parameter '{}robot_description' from ROS param server, exiting now.".format(namespace))
+            if joint_id in self.get_joint_indices() or joint_id in self.get_fixed_joint_indices():
+                joint_state = pb.getJointState(
+                    self._id, joint_id, physicsClientId=self._uid)
+                joint_positions = joint_state[0]
+                joint_velocities = joint_state[1]
+                joint_reaction_forces = joint_state[2]
+                joint_efforts = joint_state[3]
+                return joint_positions, joint_velocities, joint_reaction_forces, joint_efforts
+            else:
+                rospy.logerr("[PyBulletRobotDescription::get_joint_state] Desired joint ID does not exist!")
                 return None
-            rospy.loginfo(
-                "[PyBulletRobot::get_robot_urdf_path] Generating urdf file from param '{}robot_description' at: {}".format(
-                    namespace, urdf_path[:-6]))
-            try:
-                with open(urdf_path[:-6], 'w') as urdf_file:
-                    urdf_file.write(robot_description)
-                return urdf_path[:-6]
-            except Exception as ex:
-                rospy.logerr(
-                    "[PyBulletRobot::get_robot_urdf_path] Failed to create urdf file from param '{}robot_description', " +
-                    "cannot write file, exiting now: {}".format(namespace, ex))
-                return None
+
+    def get_link_state(self, link_id):
+        """
+        Get state of desired link.
+
+        :param link_id: Index of desired link
+        :type link_id: int
+
+        :return: State of the link (cartesian position of link frame in robot description,
+                                    cartesian orientation of link frame in robot description in quaternion xyzw,
+                                    cartesian linear velocity, cartesian angular velocity)
+        :rtype: list of float
+        """
+        if link_id not in self._all_joint_indices:
+            rospy.logerr("[PyBulletRobotDescription::get_link_state] Desired link ID does not exist!")
+            return False
         else:
-            rospy.logerr(
-                "[PyBulletRobot::get_urdf_path] Unknown file format of file {}, " +
-                "expected a '.urdf' or '.urdf.xacro' file, exiting now".format(urdf_path))
-            return None
+            link_state = pb.getLinkState(self._id, link_id, computeLinkVelocity=1, physicsClientId=self._uid)
+            return link_state[4], link_state[5], link_state[6], link_state[7]
+
+    def get_base_state(self):
+        """
+        Get state of the base.
+
+        :return: State of the base (cartesian position, cartesian orientation in quaternion xyzw,
+                                    cartesian linear velocity, cartesian angular velocity)
+        :rtype: list of float
+        """
+        return pb.getBasePositionAndOrientation(self._id, self._uid) + pb.getBaseVelocity(self._id, self._uid)

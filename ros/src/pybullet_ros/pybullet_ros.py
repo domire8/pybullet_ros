@@ -31,68 +31,27 @@ class PyBulletRosWrapper(object):
         self.environment.load_environment()
         # load robots
         robot_names = rospy.get_param("~robots", None)
-        self.robot = PyBulletRobot(name=robot_names[0], uid=self.simulation.get_uid())
-        self.robot = self.robot.get_id()
-        # get all revolute joint names and pybullet index
-        rev_joint_index_name_dic, prismatic_joint_index_name_dic, fixed_joint_index_name_dic, link_names_to_ids_dic = self.get_properties()
-        self.set_initial_joint_configuration(self.robot, rev_joint_index_name_dic)
-        self.set_initial_joint_configuration(self.robot, prismatic_joint_index_name_dic)
-        # import plugins dynamically
+        self.robots = {}
         self.plugins = []
         plugins = rospy.get_param('~plugins', [])
         if not plugins:
             rospy.logwarn('No plugins found, forgot to set param ~plugins?')
         # return to normal shell color
         print('\033[0m')
-        # load plugins
-        for plugin in plugins:
-            module_ = plugin.pop("module")
-            class_ = plugin.pop("class")
-            params_ = plugin.copy()
-            rospy.loginfo('loading plugin: {} class from {}'.format(class_, module_))
-            # create object of the imported file class
-            obj = getattr(importlib.import_module(module_), class_)(self.pb, self.robot,
-                                                                    rev_joints=rev_joint_index_name_dic,
-                                                                    prism_joints=prismatic_joint_index_name_dic,
-                                                                    fixed_joints=fixed_joint_index_name_dic,
-                                                                    link_ids=link_names_to_ids_dic,
-                                                                    name=robot_names[0],
-                                                                    **params_)
-            # store objects in member variable for future use
-            self.plugins.append(obj)
+        for robot_name in robot_names:
+            robot = PyBulletRobot(name=robot_name, uid=self.simulation.get_uid())
+            self.robots[robot_name] = robot
+            # import plugins dynamically
+            for plugin in plugins:
+                module_ = plugin.pop("module")
+                class_ = plugin.pop("class")
+                params_ = plugin.copy()
+                rospy.loginfo('loading plugin: {} class from {}'.format(class_, module_))
+                # create object of the imported file class
+                obj = getattr(importlib.import_module(module_), class_)(self.pb, robot, **params_)
+                # store objects in member variable for future use
+                self.plugins.append(obj)
         rospy.loginfo('pybullet ROS wrapper initialized')
-
-    def get_properties(self):
-        """
-        construct 3 dictionaries:
-        - joint index to joint name x2 (1 for revolute, 1 for fixed joints)
-        - link name to link index dictionary
-        """
-        rev_joint_index_name_dic = {}
-        fixed_joint_index_name_dic = {}
-        prismatic_joint_index_name_dic = {}
-        link_names_to_ids_dic = {}
-        for joint_index in range(0, self.pb.getNumJoints(self.robot)):
-            info = self.pb.getJointInfo(self.robot, joint_index)
-            # build a dictionary of link names to ids
-            link_names_to_ids_dic[info[12].decode('utf-8')] = joint_index
-            # ensure we are dealing with a revolute joint
-            if info[2] == self.pb.JOINT_REVOLUTE:
-                # insert key, value in dictionary (joint index, joint name)
-                rev_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
-            elif info[2] == self.pb.JOINT_FIXED:
-                # insert key, value in dictionary (joint index, joint name)
-                fixed_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
-            elif info[2] == self.pb.JOINT_PRISMATIC:
-                prismatic_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
-        return rev_joint_index_name_dic, prismatic_joint_index_name_dic, fixed_joint_index_name_dic, link_names_to_ids_dic
-
-    def set_initial_joint_configuration(self, robot, joint_dict):
-        """Function to set initial joint configuration to the mean of the joint position limits."""
-        for joint_id, joint_name in joint_dict.items():
-            lower_lim = self.pb.getJointInfo(robot, joint_id)[8]
-            upper_lim = self.pb.getJointInfo(robot, joint_id)[9]
-            self.pb.resetJointState(robot, joint_id, (upper_lim + lower_lim) / 2)
 
     def start_pybullet_ros_wrapper_sequential(self):
         """
