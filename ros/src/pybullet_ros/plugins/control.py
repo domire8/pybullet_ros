@@ -45,39 +45,30 @@ class pveControl:
 
 # plugin is implemented below
 class Control:
-    def __init__(self, pybullet, robot, **kargs):
+    def __init__(self, pybullet, robot):
         # get "import pybullet as pb" and store in self.pb
         self.pb = pybullet
         # get robot from parent class
         self.robot = robot
-        # get joints names and store them in dictionary, combine both revolute and prismatic dic
-        joint_index_name_dic = {**kargs['rev_joints'], **kargs['prism_joints']}
-        self.joint_indices = [joint for joint in joint_index_name_dic]
         # lists to recall last received command (useful when controlling multiple joints)
-        self.position_joint_commands = [0] * len(self.joint_indices)
-        self.velocity_joint_commands = [0] * len(self.joint_indices)
-        self.effort_joint_commands = [0] * len(self.joint_indices)
+        self.position_joint_commands = [0] * len(self.robot.get_joint_indices())
+        self.velocity_joint_commands = [0] * len(self.robot.get_joint_indices())
+        self.effort_joint_commands = [0] * len(self.robot.get_joint_indices())
         # this parameter will be set for all robot joints
-        if rospy.has_param('~max_effort_vel_mode'):
-            rospy.logwarn('max_effort_vel_mode parameter is deprecated, please use max_effort instead')
-            # kept for backwards compatibility, delete after some time
-            max_effort = rospy.get_param('~max_effort_vel_mode', 100.0)
-        else:
-            max_effort = rospy.get_param('~max_effort', 100.0)
+        max_effort = rospy.get_param('~max_effort', 100.0)
         # the max force to apply to the joint, used in velocity control
-        self.force_commands = [max_effort] * len(self.joint_indices)
+        self.force_commands = [max_effort] * len(self.robot.get_joint_indices())
 
-        namespace = "/" + kargs["name"] + "/"
         # setup subscribers
-        self.pc_subscriber = pveControl('position', namespace)
-        self.vc_subscriber = pveControl('velocity', namespace)
-        self.ec_subscriber = pveControl('effort', namespace)
+        self.pc_subscriber = pveControl('position', self.robot.get_namespace())
+        self.vc_subscriber = pveControl('velocity', self.robot.get_namespace())
+        self.ec_subscriber = pveControl('effort', self.robot.get_namespace())
 
     def execute(self):
         """this function gets called from pybullet ros main update loop"""
         """check if user has commanded a joint and forward the request to pybullet"""
         # flag to indicate there are pending position control tasks
-        control_params = {"bodyUniqueId": self.robot, "jointIndices": self.joint_indices}
+        control_params = {"bodyUniqueId": self.robot.get_id(), "jointIndices": self.robot.get_joint_indices()}
         if self.pc_subscriber.get_is_data_available():
             control_params["controlMode"] = self.pb.POSITION_CONTROL
             control_params["targetPositions"] = self.pc_subscriber.get_last_cmd()
