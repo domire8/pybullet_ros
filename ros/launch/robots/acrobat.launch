@@ -1,21 +1,21 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="robot_name" default="franka"/>
-    <arg name="config_file" default="$(find pybullet_ros)/ros/config/robots/franka_config.yaml"/>
+    <arg name="robot_name" default="acrobat"/>
+    <arg name="config_file" default="$(find pybullet_ros)/ros/config/robots/acrobat_robot_config.yaml"/>
     <!-- e.g. from my_ros_pkg.my_env import Environment ; "my_env" is what you set in environment param below-->
     <arg name="plugin_import_prefix" default="pybullet_ros.plugins"/>
     <arg name="environment" default="environment"/> <!-- name of python file without the .py inside plugins folder -->
     <arg name="pybullet_gui" default="True"/>
     <arg name="gui_options" default=""/>
     <arg name="rviz_bringup" default="True"/>
-    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/franka.rviz"/>
+    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
     <arg name="start_paused" default="False"/>
     <arg name="parallel_plugin_execution" default="True"/>
     <arg name="use_deformable_world" default="False"/> <!-- enable/disable soft body simulation -->
 
     <group ns="$(arg robot_name)">
-        <arg name="urdf_path" default="$(find franka_panda_description)/robots/panda_arm.urdf.xacro"/>
+        <arg name="urdf_path" default="$(find pybullet_ros)/common/test/urdf/acrobat_robot/acrobat_robot.urdf.xacro"/>
         <param name="urdf_path" value="$(arg urdf_path)"/>
         <param name="pose_x" value="0.0"/>
         <param name="pose_y" value="0.0"/>
@@ -25,12 +25,11 @@
         <param name="use_inertia_from_file" value="True"/>
 
         <!-- upload urdf model to ROS param server -->
-        <param name="robot_description" command="$(find xacro)/xacro $(arg urdf_path) arm_id:=$(arg robot_name) xyz:='0 0 0'"/>
+        <param name="robot_description" command="$(find xacro)/xacro $(arg urdf_path)"/>
 
         <!-- robot_state_publisher, publish tf based on /joint_states topic and robot_description param -->
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen"/>
     </group>
-
 
     <!-- pybullet ros wrapper -->
     <include file="$(find pybullet_ros)/ros/launch/pybullet_ros.launch">
@@ -44,6 +43,11 @@
         <arg name="start_paused" value="$(arg start_paused)"/>
         <arg name="parallel_plugin_execution" value="$(arg parallel_plugin_execution)"/>
         <arg name="use_deformable_world" value="$(arg use_deformable_world)"/>
+    </include>
+
+    <!-- qt gui to control robot using side bars -->
+    <include file="$(find pybullet_ros)/ros/launch/tools/position_cmd_gui.launch">
+        <arg name="robot_name" value="$(arg robot_name)"/>
     </include>
 
 </launch>

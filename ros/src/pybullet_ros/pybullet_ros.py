@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 import importlib
-import os
 
 import rospy
-from pybullet_ros.function_exec_manager import FuncExecManager
 
+from .function_exec_manager import FuncExecManager
+from .pybullet_robot import PyBulletRobot
 from .pybullet_sim import PyBulletSim
 
 
-class pyBulletRosWrapper(object):
+class PyBulletRosWrapper(object):
     """ROS wrapper class for pybullet simulator"""
 
     def __init__(self):
@@ -26,129 +26,32 @@ class pyBulletRosWrapper(object):
         plugin_import_prefix = rospy.get_param('~plugin_import_prefix', 'pybullet_ros.plugins')
         self.environment = getattr(importlib.import_module(f'{plugin_import_prefix}.{env_plugin}'), 'Environment')(
             self.pb)
-        # load robot URDF model, set gravity, and ground plane
-        self.robot = self.init_pybullet_robot()
-        self.connected_to_physics_server = None
-        if not self.robot:
-            self.connected_to_physics_server = False
-            return  # Error while loading urdf file
-        else:
-            self.connected_to_physics_server = True
-        # get all revolute joint names and pybullet index
-        rev_joint_index_name_dic, prismatic_joint_index_name_dic, fixed_joint_index_name_dic, link_names_to_ids_dic = self.get_properties()
-        self.set_initial_joint_configuration(self.robot, rev_joint_index_name_dic)
-        self.set_initial_joint_configuration(self.robot, prismatic_joint_index_name_dic)
-        # import plugins dynamically
+        rospy.loginfo('loading environment')
+        # set gravity and ground plane
+        self.environment.load_environment()
+        # load robots
+        robot_names = rospy.get_param("~robots", None)
+        self.robots = {}
         self.plugins = []
         plugins = rospy.get_param('~plugins', [])
         if not plugins:
             rospy.logwarn('No plugins found, forgot to set param ~plugins?')
         # return to normal shell color
         print('\033[0m')
-        # load plugins
-        for plugin in plugins:
-            module_ = plugin.pop("module")
-            class_ = plugin.pop("class")
-            params_ = plugin.copy()
-            rospy.loginfo('loading plugin: {} class from {}'.format(class_, module_))
-            # create object of the imported file class
-            obj = getattr(importlib.import_module(module_), class_)(self.pb, self.robot,
-                                                                    rev_joints=rev_joint_index_name_dic,
-                                                                    prism_joints=prismatic_joint_index_name_dic,
-                                                                    fixed_joints=fixed_joint_index_name_dic,
-                                                                    link_ids=link_names_to_ids_dic,
-                                                                    **params_)
-            # store objects in member variable for future use
-            self.plugins.append(obj)
+        for robot_name in robot_names:
+            robot = PyBulletRobot(name=robot_name, uid=self.simulation.uid)
+            self.robots[robot_name] = robot
+            # import plugins dynamically
+            for plugin in plugins:
+                module_ = plugin.pop("module")
+                class_ = plugin.pop("class")
+                params_ = plugin.copy()
+                rospy.loginfo('loading plugin: {} class from {}'.format(class_, module_))
+                # create object of the imported file class
+                obj = getattr(importlib.import_module(module_), class_)(self.pb, robot, **params_)
+                # store objects in member variable for future use
+                self.plugins.append(obj)
         rospy.loginfo('pybullet ROS wrapper initialized')
-
-    def get_properties(self):
-        """
-        construct 3 dictionaries:
-        - joint index to joint name x2 (1 for revolute, 1 for fixed joints)
-        - link name to link index dictionary
-        """
-        rev_joint_index_name_dic = {}
-        fixed_joint_index_name_dic = {}
-        prismatic_joint_index_name_dic = {}
-        link_names_to_ids_dic = {}
-        for joint_index in range(0, self.pb.getNumJoints(self.robot)):
-            info = self.pb.getJointInfo(self.robot, joint_index)
-            # build a dictionary of link names to ids
-            link_names_to_ids_dic[info[12].decode('utf-8')] = joint_index
-            # ensure we are dealing with a revolute joint
-            if info[2] == self.pb.JOINT_REVOLUTE:
-                # insert key, value in dictionary (joint index, joint name)
-                rev_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
-            elif info[2] == self.pb.JOINT_FIXED:
-                # insert key, value in dictionary (joint index, joint name)
-                fixed_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
-            elif info[2] == self.pb.JOINT_PRISMATIC:
-                prismatic_joint_index_name_dic[joint_index] = info[1].decode('utf-8')  # info[1] refers to joint name
-        return rev_joint_index_name_dic, prismatic_joint_index_name_dic, fixed_joint_index_name_dic, link_names_to_ids_dic
-
-    def init_pybullet_robot(self):
-        """load robot URDF model, set gravity, ground plane and environment"""
-        # get from param server the path to the URDF robot model to load at startup
-        urdf_path = rospy.get_param('~robot_urdf_path', None)
-        if urdf_path == None:
-            rospy.signal_shutdown('mandatory param robot_urdf_path not set, will exit now')
-        # test urdf file existance
-        if not os.path.isfile(urdf_path):
-            rospy.logerr('param robot_urdf_path is set, but file does not exist : ' + urdf_path)
-            rospy.signal_shutdown('required robot urdf file not found')
-            return None
-        # ensure urdf is not xacro, but if it is then make urdf file version out of it
-        if 'xacro' in urdf_path:
-            robot_description = rospy.get_param('robot_description', None)
-            if not robot_description:
-                rospy.logerr('required robot_description param not set')
-                return None
-            # remove xacro from name
-            urdf_path_without_xacro = urdf_path[0:urdf_path.find('.xacro')] + urdf_path[
-                                                                              urdf_path.find('.xacro') + len('.xacro'):]
-            rospy.loginfo('generating urdf model from xacro from robot_description param server under: {0}'.format(
-                urdf_path_without_xacro))
-            try:
-                urdf_file = open(urdf_path_without_xacro, 'w')
-            except:
-                rospy.logerr('Failed to create urdf file from xacro, cannot write into destination: {0}'.format(
-                    urdf_path_without_xacro))
-                return None
-            urdf_file.write(robot_description)
-            urdf_file.close()
-            urdf_path = urdf_path_without_xacro
-        # get robot spawn pose from parameter server
-        robot_pose_x = rospy.get_param('~robot_pose_x', 0.0)
-        robot_pose_y = rospy.get_param('~robot_pose_y', 0.0)
-        robot_pose_z = rospy.get_param('~robot_pose_z', 1.0)
-        robot_pose_yaw = rospy.get_param('~robot_pose_yaw', 0.0)
-        robot_spawn_orientation = self.pb.getQuaternionFromEuler([0.0, 0.0, robot_pose_yaw])
-        fixed_base = rospy.get_param('~fixed_base', False)
-        # load robot from URDF model
-        # user decides if inertia is computed automatically by pybullet or custom
-        if rospy.get_param('~use_intertia_from_file', False):
-            # combining several boolean flags using "or" according to pybullet documentation
-            urdf_flags = self.pb.URDF_USE_INERTIA_FROM_FILE | self.pb.URDF_USE_SELF_COLLISION
-        else:
-            urdf_flags = self.pb.URDF_USE_SELF_COLLISION
-        # load environment
-        rospy.loginfo('loading environment')
-        self.environment.load_environment()
-        # set no realtime simulation, NOTE: no need to stepSimulation if setRealTimeSimulation is set to 1
-        self.pb.setRealTimeSimulation(0)  # NOTE: does not currently work with effort controller, thats why is left as 0
-        rospy.loginfo('loading urdf model: ' + urdf_path)
-        # NOTE: self collision enabled by default
-        return self.pb.loadURDF(urdf_path, basePosition=[robot_pose_x, robot_pose_y, robot_pose_z],
-                                baseOrientation=robot_spawn_orientation,
-                                useFixedBase=fixed_base, flags=urdf_flags)
-
-    def set_initial_joint_configuration(self, robot, joint_dict):
-        """Function to set initial joint configuration to the mean of the joint position limits."""
-        for joint_id, joint_name in joint_dict.items():
-            lower_lim = self.pb.getJointInfo(robot, joint_id)[8]
-            upper_lim = self.pb.getJointInfo(robot, joint_id)[9]
-            self.pb.resetJointState(robot, joint_id, (upper_lim + lower_lim) / 2)
 
     def start_pybullet_ros_wrapper_sequential(self):
         """
@@ -192,6 +95,6 @@ class pyBulletRosWrapper(object):
 
 def main():
     """function called by pybullet_ros_node script"""
-    rospy.init_node('pybullet_ros', anonymous=False)  # node name gets overrided if launched by a launch file
-    pybullet_ros_interface = pyBulletRosWrapper()
+    rospy.init_node('pybullet_ros', anonymous=False)  # node name gets overridden if launched by a launch file
+    pybullet_ros_interface = PyBulletRosWrapper()
     pybullet_ros_interface.start_pybullet_ros_wrapper()

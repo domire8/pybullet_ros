@@ -18,13 +18,13 @@ plugins:
   -
     module: pybullet_ros.plugins.control
     class: Control
-  - 
+  -
     module: pybullet_ros.plugins.joint_state_pub
     class: joinStatePub
-  - 
+  -
     module: pybullet_ros.plugins.laser_scanner
     class: laserScanner
-  - 
+  -
     module: pybullet_ros.plugins.rgbd_camera
     class: RGBDCamera
 
@@ -52,3 +52,6 @@ rgbd_camera:
     resolution:
         width:          640             # default: 640, horizontal image resolution in pixels
         height:         480             # default: 480, vertical image resolution in pixels
+
+robots:
+  - r2d2

@@ -5,11 +5,13 @@ Query robot base pose and speed from pybullet and publish to /odom topic
 This component does not add any noise to it
 """
 
-import rospy, tf
+import rospy
+import tf
 from nav_msgs.msg import Odometry
 
+
 class simpleOdometry:
-    def __init__(self, pybullet, robot, **kargs):
+    def __init__(self, pybullet, robot):
         # get "import pybullet as pb" and store in self.pb
         self.pb = pybullet
         # get robot from parent class
@@ -27,22 +29,22 @@ class simpleOdometry:
         # set msg timestamp based on current time
         self.odom_msg.header.stamp = rospy.Time.now()
         # query base pose from pybullet and store in odom msg
-        position, orientation = self.pb.getBasePositionAndOrientation(self.robot)
-        [self.odom_msg.pose.pose.position.x,\
-         self.odom_msg.pose.pose.position.y,\
+        position, orientation, linear_velocity, angular_velocity = self.robot.get_base_state()
+        [self.odom_msg.pose.pose.position.x,
+         self.odom_msg.pose.pose.position.y,
          self.odom_msg.pose.pose.position.z] = position
-        [self.odom_msg.pose.pose.orientation.x,\
-         self.odom_msg.pose.pose.orientation.y,\
-         self.odom_msg.pose.pose.orientation.z,\
-        self.odom_msg.pose.pose.orientation.w] = orientation
+        [self.odom_msg.pose.pose.orientation.x,
+         self.odom_msg.pose.pose.orientation.y,
+         self.odom_msg.pose.pose.orientation.z,
+         self.odom_msg.pose.pose.orientation.w] = orientation
         # query base velocity from pybullet and store it in msg
-        [self.odom_msg.twist.twist.linear.x,\
-         self.odom_msg.twist.twist.linear.y,\
-         self.odom_msg.twist.twist.linear.z],\
-        [self.odom_msg.twist.twist.angular.x,\
-         self.odom_msg.twist.twist.angular.y,\
-         self.odom_msg.twist.twist.angular.z] = self.pb.getBaseVelocity(self.robot)
+        [self.odom_msg.twist.twist.linear.x,
+         self.odom_msg.twist.twist.linear.y,
+         self.odom_msg.twist.twist.linear.z] = linear_velocity
+        [self.odom_msg.twist.twist.angular.x,
+         self.odom_msg.twist.twist.angular.y,
+         self.odom_msg.twist.twist.angular.z] = angular_velocity
         self.pub_odometry.publish(self.odom_msg)
         # tf broadcast (odom to base_link)
-        self.br.sendTransform(position, orientation, rospy.Time.now(), \
-            self.odom_msg.child_frame_id, self.odom_msg.header.frame_id)
+        self.br.sendTransform(position, orientation, rospy.Time.now(),
+                              self.odom_msg.child_frame_id, self.odom_msg.header.frame_id)

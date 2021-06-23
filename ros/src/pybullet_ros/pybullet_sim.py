@@ -11,6 +11,7 @@ class PyBulletSim(object):
     The Simulation class creates the PyBullet physics server and optionally a GUI.
 
     Available methods (for usage, see documentation at function definition):
+        - uid
         - is_alive
         - step
         - add_pybullet_path
@@ -46,7 +47,7 @@ class PyBulletSim(object):
             print("\033[34m")  # print PyBullet stuff in blue
             self._uid = pb.connect(pb.DIRECT)
 
-        self.simulation_paused = start_paused
+        self._simulation_paused = start_paused
 
         self.add_pybullet_path()
 
@@ -60,6 +61,15 @@ class PyBulletSim(object):
         Disconnect the physics server
         """
         pb.disconnect(self._uid)
+
+    @property
+    def uid(self):
+        """
+        Get UID of physics server
+
+        :rtype: int
+        """
+        return self._uid
 
     def is_alive(self):
         """
@@ -75,7 +85,7 @@ class PyBulletSim(object):
 
         :rtype: bool
         """
-        return self.simulation_paused
+        return self._simulation_paused
 
     def step(self):
         """

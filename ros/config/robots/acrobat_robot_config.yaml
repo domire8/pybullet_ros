@@ -1,7 +1,11 @@
 # pybullet plugins, will be loaded during runtime
-plugins: {  pybullet_ros.plugins.control: Control,
-            pybullet_ros.plugins.joint_state_pub: joinStatePub,
-            pybullet_ros.plugins.rgbd_camera: RGBDCamera}
+plugins:
+  - module: pybullet_ros.plugins.control
+    class: Control
+  - module: pybullet_ros.plugins.joint_state_pub
+    class: joinStatePub
+  - module: pybullet_ros.plugins.rgbd_camera
+    class: RGBDCamera
 
 loop_rate:              80.0
 gravity:                -9.81
@@ -13,3 +17,6 @@ rgbd_camera:
     resolution:
         width:          640
         height:         480
+
+robots:
+  - acrobat
