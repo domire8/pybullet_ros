@@ -63,47 +63,47 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        panda_link0:
+        franka_link0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link1:
+        franka_link1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link2:
+        franka_link2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link3:
+        franka_link3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link4:
+        franka_link4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link5:
+        franka_link5:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link6:
+        franka_link6:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link7:
+        franka_link7:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        panda_link8:
+        franka_link8:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -122,23 +122,23 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        panda_link0:
+        franka_link0:
           Value: true
-        panda_link1:
+        franka_link1:
           Value: true
-        panda_link2:
+        franka_link2:
           Value: true
-        panda_link3:
+        franka_link3:
           Value: true
-        panda_link4:
+        franka_link4:
           Value: true
-        panda_link5:
+        franka_link5:
           Value: true
-        panda_link6:
+        franka_link6:
           Value: true
-        panda_link7:
+        franka_link7:
           Value: true
-        panda_link8:
+        franka_link8:
           Value: true
         world:
           Value: true
@@ -150,15 +150,15 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          panda_link0:
-            panda_link1:
-              panda_link2:
-                panda_link3:
-                  panda_link4:
-                    panda_link5:
-                      panda_link6:
-                        panda_link7:
-                          panda_link8:
+          franka_link0:
+            franka_link1:
+              franka_link2:
+                franka_link3:
+                  franka_link4:
+                    franka_link5:
+                      franka_link6:
+                        franka_link7:
+                          franka_link8:
                             {}
       Update Interval: 0
       Value: true
@@ -166,7 +166,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: panda_link0
+    Fixed Frame: franka_link0
     Frame Rate: 30
   Name: root
   Tools:
@@ -227,4 +227,4 @@ Window Geometry:
     collapsed: true
   Width: 1359
   X: 1120
-  Y: 50
+  Y: 30
