@@ -41,11 +41,11 @@ class PyBulletRobot(PyBulletRobotDescription):
             return
         self._namespace = "/" + name + "/"
         PyBulletRobotDescription.__init__(self, self._namespace, self._uid)
-        self._initialized = self.is_initialized()
-
+        self._initialized = self.is_initialized
+        
     def get_joint_state_msg(self):
         msg = JointState()
-        msg.name = [self.get_all_joint_names()[i] for i in self.get_joint_indices()]
+        msg.name = [self.all_joint_names[i] for i in self.joint_indices]
         msg.position, msg.velocity, _, msg.effort = self.get_joint_state()
         return msg
 
@@ -66,7 +66,7 @@ class PyBulletRobot(PyBulletRobotDescription):
             joint_reaction_forces = []
             joint_efforts = []
 
-            for idx in self.get_joint_indices():
+            for idx in self.joint_indices:
                 joint_state = pb.getJointState(
                     self._id, idx, physicsClientId=self._uid)
                 joint_positions.append(joint_state[0])
@@ -76,7 +76,7 @@ class PyBulletRobot(PyBulletRobotDescription):
             return joint_positions, joint_velocities, joint_reaction_forces, joint_efforts
 
         else:
-            if joint_id in self.get_joint_indices() or joint_id in self.get_fixed_joint_indices():
+            if joint_id in self.joint_indices or joint_id in self.fixed_joint_indices:
                 joint_state = pb.getJointState(
                     self._id, joint_id, physicsClientId=self._uid)
                 joint_positions = joint_state[0]

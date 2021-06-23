@@ -111,7 +111,7 @@ class cmdVelCtrl:
         lin_cmd_vel_in_odom = self.transformVector3('odom', lin_vec)
         ang_cmd_vel_in_odom = self.transformVector3('odom', ang_vec)
         # set vel directly on robot model
-        self.pb.resetBaseVelocity(self.robot.get_id(), [lin_cmd_vel_in_odom.vector.x, lin_cmd_vel_in_odom.vector.y,
-                                                        lin_cmd_vel_in_odom.vector.z],
+        self.pb.resetBaseVelocity(self.robot.id, [lin_cmd_vel_in_odom.vector.x, lin_cmd_vel_in_odom.vector.y,
+                                                  lin_cmd_vel_in_odom.vector.z],
                                   [ang_cmd_vel_in_odom.vector.x, ang_cmd_vel_in_odom.vector.y,
                                    ang_cmd_vel_in_odom.vector.z])

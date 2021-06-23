@@ -25,9 +25,9 @@ class laserScanner:
             rospy.signal_shutdown('required param laser_frame_id not set')
             return
         # get pybullet laser link id from its name
-        if not laser_frame_id in self.robot.get_link_names():
+        if not laser_frame_id in self.robot.link_names:
             rospy.logerr('laser reference frame "{}" not found in URDF model, cannot continue'.format(laser_frame_id))
-            rospy.logwarn('Available frames are: {}'.format(self.robot.get_link_names))
+            rospy.logwarn('Available frames are: {}'.format(self.robot.link_names))
             rospy.signal_shutdown('required param frame id not set properly')
             return
         self.pb_laser_link_id = self.robot.get_link_index_by_name(laser_frame_id)

@@ -31,9 +31,9 @@ class RGBDCamera:
             rospy.signal_shutdown('Required parameter rgbd_camera/frame_id not set')
             return
         # get pybullet camera link id from its name
-        if not cam_frame_id in self.robot.get_link_names():
+        if not cam_frame_id in self.robot.link_names:
             rospy.logerr('Camera reference frame "{}" not found in URDF model'.format(cam_frame_id))
-            rospy.logwarn('Available frames are: {}'.format(self.robot.get_link_names()))
+            rospy.logwarn('Available frames are: {}'.format(self.robot.link_names))
             rospy.signal_shutdown('required param rgbd_camera/frame_id not set properly')
             return
         self.pb_camera_link_id = self.robot.get_link_index_by_name(cam_frame_id)

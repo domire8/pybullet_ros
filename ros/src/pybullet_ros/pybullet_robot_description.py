@@ -12,18 +12,18 @@ class PyBulletRobotDescription(object):
 
     Available methods (for usage, see documentation at function definition):
         - is_initialized
-        - get_id
-        - get_namespace
-        - get_all_joint_names
-        - get_all_joints_dict
-        - get_link_names
-        - get_link_dict
+        - id
+        - namespace
+        - all_joint_names
+        - all_joints_dict
+        - link_names
+        - link_dict
         - get_joint_index_by_name
         - get_link_index_by_name
-        - get_nb_joints
-        - get_joint_indices
-        - get_nb_fixed_joints
-        - get_fixed_joint_indices
+        - nb_joints
+        - joint_indices
+        - nb_fixed_joints
+        - fixed_joint_indices
     """
 
     def __init__(self, namespace, uid):
@@ -95,6 +95,7 @@ class PyBulletRobotDescription(object):
         # if everything went well, the robot is ready
         self._initialized = True
 
+    @property
     def is_initialized(self):
         """
         Getter of the initialized attribute.
@@ -103,7 +104,8 @@ class PyBulletRobotDescription(object):
         """
         return self._initialized
 
-    def get_id(self):
+    @property
+    def id(self):
         """
         Getter of the robot ID.
 
@@ -111,7 +113,8 @@ class PyBulletRobotDescription(object):
         """
         return self._id
 
-    def get_namespace(self):
+    @property
+    def namespace(self):
         """
         Getter of the robot namespace.
 
@@ -119,7 +122,8 @@ class PyBulletRobotDescription(object):
         """
         return self._namespace
 
-    def get_all_joint_names(self):
+    @property
+    def all_joint_names(self):
         """
         Get list with the names of joints in the robot description.
 
@@ -128,7 +132,8 @@ class PyBulletRobotDescription(object):
         """
         return self._all_joint_names
 
-    def get_all_joints_dict(self):
+    @property
+    def all_joints_dict(self):
         """
         Get a dict with all joint names mapping to their joint index in the robot description.
 
@@ -137,7 +142,8 @@ class PyBulletRobotDescription(object):
         """
         return self._all_joint_dict
 
-    def get_link_names(self):
+    @property
+    def link_names(self):
         """
         Get list with the names of all link in the robot description.
 
@@ -146,7 +152,8 @@ class PyBulletRobotDescription(object):
         """
         return self._all_link_names
 
-    def get_link_dict(self):
+    @property
+    def link_dict(self):
         """
         Get a dict with all link names mapping to their link index in the robot description.
 
@@ -202,7 +209,8 @@ class PyBulletRobotDescription(object):
         else:
             raise Exception("[PyBulletRobotDescription::get_link_index_by_name] Link name does not exist!")
 
-    def get_nb_joints(self):
+    @property
+    def nb_joints(self):
         """
         Get number of movable joints in the robot description.
 
@@ -211,7 +219,8 @@ class PyBulletRobotDescription(object):
         """
         return len(self._movable_joint_indices)
 
-    def get_joint_indices(self):
+    @property
+    def joint_indices(self):
         """
         Get joint indices of all movable joints in the robot description.
 
@@ -220,7 +229,8 @@ class PyBulletRobotDescription(object):
         """
         return self._movable_joint_indices
 
-    def get_nb_fixed_joints(self):
+    @property
+    def nb_fixed_joints(self):
         """
         Get number of fixed joints in the robot description.
 
@@ -229,7 +239,8 @@ class PyBulletRobotDescription(object):
         """
         return len(self._fixed_joint_indices)
 
-    def get_fixed_joint_indices(self):
+    @property
+    def fixed_joint_indices(self):
         """
         Get joint indices of all movable joints in the robot description.
 
@@ -238,7 +249,8 @@ class PyBulletRobotDescription(object):
         """
         return self._fixed_joint_indices
 
-    def get_joint_limits(self):
+    @property
+    def joint_limits(self):
         """
         Get joint position (lower and upper), velocity, and effort limits for all movable joints.
 

@@ -39,7 +39,7 @@ class PyBulletRosWrapper(object):
         # return to normal shell color
         print('\033[0m')
         for robot_name in robot_names:
-            robot = PyBulletRobot(name=robot_name, uid=self.simulation.get_uid())
+            robot = PyBulletRobot(name=robot_name, uid=self.simulation.uid)
             self.robots[robot_name] = robot
             # import plugins dynamically
             for plugin in plugins:
