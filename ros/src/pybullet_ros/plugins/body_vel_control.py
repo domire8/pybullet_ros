@@ -61,7 +61,7 @@ class cmdVelCtrl:
         source_frame = odom, world_frame, target_frame = base_link, robot_frame
         """
         # get robot pose from pybullet
-        t, r, _, _ = self.robot.get_base_state()
+        t, r = self.robot.get_base_state()[0:2]
         return [t[0], t[1], t[2]], [r[0], r[1], r[2], r[3]]
 
     def asMatrix(self, target_frame, hdr):
@@ -83,32 +83,6 @@ class cmdVelCtrl:
         return r
 
     # ---------- tf stuff ends
-
-    def cmd_vel_force_ctrler(self):
-        """
-        experimental code to set a torque on the robot model using a PID controller
-        """
-        pass
-        # self.controller[0].setpoint = self.cmd_vel_msg.linear.x
-        # self.controller[1].setpoint = self.cmd_vel_msg.linear.y
-        # self.controller[2].setpoint = self.cmd_vel_msg.linear.z
-        # self.controller[3].setpoint = self.cmd_vel_msg.angular.x
-        # self.controller[4].setpoint = self.cmd_vel_msg.angular.y
-        # self.controller[5].setpoint = self.cmd_vel_msg.angular.z
-        ## query current robot speed from pybullet
-        # linear_vel, angular_vel = self.pb.getBaseVelocity(self.robot)
-        ## compute torque value based on PID library
-        # output = []
-        # for i in range(0, 3):
-        # output.append(self.controller[i](linear_vel[i]))
-        # for j in range(0, 3):
-        # output.append(self.controller[j](angular_vel[j]))
-        ## apply external force to robot body
-        # self.z_offset = rospy.get_param('~cmd_vel_ctrl/z_offset', -0.35)
-        # self.pb.applyExternalForce(self.robot, linkIndex=-1, forceObj=[output[0], output[1], output[2]],
-        # posObj=[0.0, 0.0, self.z_offset], flags=self.pb.LINK_FRAME)
-        # self.pb.applyExternalTorque(self.robot, linkIndex=-1, torqueObj=[output[3], output[4], output[5]],
-        # flags=self.pb.LINK_FRAME)
 
     def cmdVelCB(self, msg):
         """callback to receive vel commands from user"""

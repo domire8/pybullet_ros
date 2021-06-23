@@ -103,7 +103,7 @@ class RGBDCamera:
             return
         self.count = 0  # reset count
         # get camera pose
-        cam_position, cam_orientation, _, _ = self.robot.get_link_state(self.pb_camera_link_id)
+        cam_position, cam_orientation = self.robot.get_link_state(self.pb_camera_link_id)[0:2]
         # target is a point 5m ahead of the robot camera expressed w.r.t world reference frame
         target = self.compute_camera_target(cam_position, cam_orientation)
         view_matrix = self.pb.computeViewMatrix(cam_position, target, [0, 0, 1])

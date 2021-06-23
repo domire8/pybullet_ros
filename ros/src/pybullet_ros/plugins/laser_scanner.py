@@ -98,7 +98,7 @@ class laserScanner:
         if self.beam_visualisation:
             self.pb.removeAllUserDebugItems()
         # get laser link position
-        laser_position, laser_orientation, _, _ = self.robot.get_link_state(self.pb_laser_link_id)
+        laser_position, laser_orientation = self.robot.get_link_state(self.pb_laser_link_id)[0:2]
         # transform start and end position of the rays which were generated considering laser at the origin
         rayFrom, rayTo = self.transform_rays(laser_position, laser_orientation)  # position + orientation
         # raycast using 4 threads
