@@ -57,8 +57,8 @@ class PyBulletRobot(PyBulletRobotDescription):
                          returned (if it exists), otherwise the joint states of all joints are returned.
         :type joint_id: int
 
-        :return: Joint positions, velocities, reaction forces, and efforts of all movable joints given by bullet physics
-        :rtype: list of float
+        :return: Joint positions, velocities, reaction forces, and efforts of all movable joints given by PyBullet
+        :rtype: tuple of float
         """
         if joint_id is None:
             joint_positions = []
