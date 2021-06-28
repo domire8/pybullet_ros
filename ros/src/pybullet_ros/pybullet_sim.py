@@ -37,14 +37,12 @@ class PyBulletSim(object):
         if gui:
             rospy.loginfo("[PyBulletSim::init] Running PyBullet with GUI")
             rospy.loginfo("-------------------------")
-            print("\033[34m")  # print PyBullet stuff in blue
             gui_options = rospy.get_param("~gui_options",
                                           "")  # e.g. to maximize screen: options="--width=2560 --height=1440"
             self._uid = pb.connect(pb.GUI, options=gui_options)
         else:
             rospy.loginfo("[PyBulletSim::init] Running PyBullet without GUI")
             rospy.loginfo("-------------------------")
-            print("\033[34m")  # print PyBullet stuff in blue
             self._uid = pb.connect(pb.DIRECT)
 
         self._simulation_paused = start_paused
@@ -110,7 +108,7 @@ class PyBulletSim(object):
         Pause the simulation, i.e. disable the stepSimulation() call.
         """
         rospy.loginfo("[PyBulletSim::pause_simulation] Pausing simulation.")
-        self.simulation_paused = True
+        self._simulation_paused = True
         res = TriggerResponse(True, "Simulation paused")
         return res
 
@@ -119,7 +117,7 @@ class PyBulletSim(object):
         Continue the simulation, i.e. enable the stepSimulation() call.
         """
         rospy.loginfo("[PyBulletSim::unpause_simulation] Unpausing simulation.")
-        self.simulation_paused = False
+        self._simulation_paused = False
         res = TriggerResponse(True, "Simulation unpaused")
         return res
 
