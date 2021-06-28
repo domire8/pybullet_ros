@@ -6,7 +6,7 @@ plugins:
   - module: pybullet_ros.plugins.control
     class: Control
   - module: pybullet_ros.plugins.joint_state_pub
-    class: jointStatePub
+    class: JointStatePub
 
 loop_rate: 500.0 # the frequency at which to step sim in h
 gravity: -9.81 # earth gravity in m/s^2
