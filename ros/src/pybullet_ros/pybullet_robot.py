@@ -42,7 +42,7 @@ class PyBulletRobot(PyBulletRobotDescription):
         self._namespace = "/" + name + "/"
         PyBulletRobotDescription.__init__(self, self._namespace, self._uid)
         self._initialized = self.is_initialized
-        
+
     def get_joint_state_msg(self):
         msg = JointState()
         msg.name = [self.all_joint_names[i] for i in self.joint_indices]
@@ -116,3 +116,9 @@ class PyBulletRobot(PyBulletRobotDescription):
         :rtype: list of float
         """
         return pb.getBasePositionAndOrientation(self._id, self._uid) + pb.getBaseVelocity(self._id, self._uid)
+
+    def get_gravity_compensation(self):
+        joint_positions, joint_velocities = self.get_joint_state()[0:2]
+        joint_torques = pb.calculateInverseDynamics(self._id, joint_positions, joint_velocities,
+                                                    [0] * len(self.joint_indices), self._uid)
+        return joint_torques
