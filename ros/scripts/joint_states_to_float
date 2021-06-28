@@ -8,51 +8,42 @@ from std_msgs.msg import Float64MultiArray
 
 class JointStatesToFloat:
     def __init__(self, namespace):
-        self.rate = rospy.Rate(10)
-        self.msg_received = False
-        self.joint_state_msg = None
-        self.previous_angles = []
-        rospy.Subscriber('fake_joint_states', JointState, self.JointStatesCB)
-        rospy.loginfo('waiting for first joint state msg to be published')
-        self.wait_for_first_msg()
-        rospy.loginfo('joint state msg received, proceeding')
-        # init previous angle list
-        self.previous_angles = [0] * len(self.joint_state_msg.position)
-        # create one publisher
-        self.pub = rospy.Publisher(os.path.join(namespace, 'position_controller/command'), Float64MultiArray,
-                                   queue_size=1)
+        self._rate = rospy.Rate(10)
+        self._msg_received = False
+        self._joint_state_msg = JointState()
+        rospy.Subscriber("fake_joint_states", JointState, self._joint_states_cb)
+        rospy.loginfo("[JointStatesToFloat::init] Waiting for first joint state message to be published.")
+        self._wait_for_first_msg()
+        rospy.loginfo("[JointStatesToFloat::init] Joint state message received, proceeding.")
+        self._previous_positions = [0] * len(self._joint_state_msg.position)
+        self._pub = rospy.Publisher(os.path.join(namespace, 'position_controller/command'), Float64MultiArray,
+                                    queue_size=1)
 
-    def wait_for_first_msg(self):
-        while not self.msg_received:
-            # wait until at least one joint state msg is received
-            self.rate.sleep()
+    def _wait_for_first_msg(self):
+        while not self._msg_received:
+            self._rate.sleep()
 
-    def JointStatesCB(self, msg):
-        self.joint_state_msg = msg
-        self.msg_received = True
+    def _joint_states_cb(self, msg):
+        self._joint_state_msg = msg
+        self._msg_received = True
 
-    def publishJointsAsFloats(self):
-        # extract desired angles from joint state msg
-        angles = [a for a in self.joint_state_msg.position]
-        # compare previous angles to see if there was any change
-        changes = []
-        for i, previous_angle in enumerate(self.previous_angles):
-            changes.append(previous_angle != angles[i])
-        # publish desired angles to float topic
-        if any(changes):
-            float_msg = Float64MultiArray()
-            float_msg.data = angles
-            self.pub.publish(float_msg)
-        # to keep track if the angle changed or not
-        self.previous_angles = angles
+    def _publish_command(self):
+        positions = [joint for joint in self._joint_state_msg.position]
+        # compare with previous positions to see if there was any change
+        if any([previous != new for previous, new in zip(self._previous_positions, positions)]):
+            msg = Float64MultiArray()
+            msg.data = positions
+            self._pub.publish(msg)
+        # to keep track if the positions changed or not
+        self.previous_angles = positions
 
     def start(self):
         while not rospy.is_shutdown():
-            if self.msg_received:
+            if self._msg_received:
                 # lower flag
-                self.msg_received = False
-                self.publishJointsAsFloats()
-            self.rate.sleep()
+                self._msg_received = False
+                self._publish_command()
+            self._rate.sleep()
 
 
 if __name__ == '__main__':

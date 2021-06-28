@@ -1,27 +1,23 @@
 #!/usr/bin/env python3
 
 """
-query robot state and publish position, velocity and effort values to /joint_states
+Query robot state and publish position, velocity and effort values to /robot_name/joint_states.
 """
 
 import rospy
 from sensor_msgs.msg import JointState
 
 
-class jointStatePub:
+class JointStatePub:
     def __init__(self, pybullet, robot):
-        # get "import pybullet as pb" and store in self.pb
-        self.pb = pybullet
-        # get robot from parent class
-        self.robot = robot
-        # register this node in the network as a publisher in /joint_states topic
-        self.pub_joint_states = rospy.Publisher(robot.namespace + "joint_states", JointState, queue_size=1)
+        self._pb = pybullet
+        self._robot = robot
+        self._publisher = rospy.Publisher(robot.namespace + "joint_states", JointState, queue_size=1)
 
     def execute(self):
-        """this function gets called from pybullet ros main update loop"""
-        # get joint state msg directly from robot
-        joint_msg = self.robot.get_joint_state_msg()
-        # update msg time using ROS time API
+        """
+        Execute the plugin. This function is called from main update loop in the pybullet ros node.
+        """
+        joint_msg = self._robot.get_joint_state_msg()
         joint_msg.header.stamp = rospy.Time.now()
-        # publish joint states to ROS
-        self.pub_joint_states.publish(joint_msg)
+        self._publisher.publish(joint_msg)
