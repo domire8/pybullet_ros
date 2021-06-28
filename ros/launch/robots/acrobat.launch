@@ -2,14 +2,14 @@
 <launch>
 
     <arg name="robot_name" default="acrobat"/>
-    <arg name="config_file" default="$(find pybullet_ros)/ros/config/robots/acrobat_robot_config.yaml"/>
+    <arg name="config_file" default="$(find pybullet_ros)/ros/config/robots/acrobat_config.yaml"/>
     <!-- e.g. from my_ros_pkg.my_env import Environment ; "my_env" is what you set in environment param below-->
     <arg name="plugin_import_prefix" default="pybullet_ros.plugins"/>
     <arg name="environment" default="environment"/> <!-- name of python file without the .py inside plugins folder -->
     <arg name="pybullet_gui" default="True"/>
     <arg name="gui_options" default=""/>
     <arg name="rviz_bringup" default="True"/>
-    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
+    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/acrobat.rviz"/>
     <arg name="start_paused" default="False"/>
     <arg name="parallel_plugin_execution" default="True"/>
     <arg name="use_deformable_world" default="False"/> <!-- enable/disable soft body simulation -->

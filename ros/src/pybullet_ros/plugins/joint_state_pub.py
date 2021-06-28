@@ -8,7 +8,7 @@ import rospy
 from sensor_msgs.msg import JointState
 
 
-class joinStatePub:
+class jointStatePub:
     def __init__(self, pybullet, robot):
         # get "import pybullet as pb" and store in self.pb
         self.pb = pybullet
