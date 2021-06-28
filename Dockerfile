@@ -49,7 +49,7 @@ RUN sudo chmod +x /sbin/update_bashrc ; sudo chown ros /sbin/update_bashrc ; syn
 FROM ros-ws AS ros-user
 
 COPY --chown=ros . ./pybullet_ros/
-RUN rm -rf ./pybullet_ros/docker ./pybullet_ros/common ./pybullet_ros/Dockerfile ./pybullet_ros/requirements.txt
+RUN rm -rf ./pybullet_ros/docker ./pybullet_ros/Dockerfile ./pybullet_ros/requirements.txt
 RUN cd ${HOME}/ros_ws && /bin/bash -c "source /ros_entrypoint.sh; catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
 
 # Change entrypoint to source ~/.bashrc and start in ~

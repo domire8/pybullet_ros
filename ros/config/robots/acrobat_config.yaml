@@ -2,7 +2,7 @@ plugins:
   - module: pybullet_ros.plugins.control
     class: Control
   - module: pybullet_ros.plugins.joint_state_pub
-    class: jointStatePub
+    class: JointStatePub
   - module: pybullet_ros.plugins.rgbd_camera
     class: RGBDCamera
 
