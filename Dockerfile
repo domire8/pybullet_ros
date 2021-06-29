@@ -7,7 +7,6 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 
 RUN apt-get update && apt-get install -y \
-    cmake \
     libgl1-mesa-glx \
     sudo git nano \
     python3-pip \
@@ -15,9 +14,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # install pybullet
-RUN git clone https://github.com/bulletphysics/bullet3
-RUN cd bullet3 && ./build_cmake_pybullet_double.sh
-ENV PYTHONPATH="/bullet3/build_cmake/examples/pybullet":"${PYTHONPATH}"
+RUN pip3 install pybullet
 
 FROM project-sources AS ros-ws
 

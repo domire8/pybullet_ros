@@ -34,21 +34,25 @@ directory.
 
 # Local installation
 
-The following instructions have been tested under ubuntu 20.04
+The following instructions have been tested under Ubuntu 20.04
 and [ROS noetic](http://wiki.ros.org/noetic/Installation/Ubuntu).
 
 This wrapper requires that you have PyBullet installed, you can do so by executing:
 
-        sudo -H pip3 install pybullet
+```bash
+sudo apt-get update
+sudo apt-get install python3-pip
+sudo -H pip3 install pybullet
+```
 
-Additionally, clone this repository inside
-your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace), compile (catkin build) and source your
-devel workspace (as you would normally do with any ROS pkg).
+Then, clone this repository inside your catkin workspace, build and source it, and it's ready.
 
-In case you need to simulate RGBD sensor then install opencv for python3 and ros cv bridge:
+In case you need to simulate the RGBD camera, make sure that *opencv* for Pythone and the ROS CV bridge are installed:
 
-        sudo -H pip3 install opencv-python
-        sudo apt install ros-noetic-cv-bridge
+```bash
+sudo -H pip3 install opencv-python
+sudo apt install ros-noetic-cv-bridge
+```
 
 # Test the simulator
 
