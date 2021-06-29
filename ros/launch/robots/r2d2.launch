@@ -10,8 +10,8 @@
     <arg name="environment" default="environment"/> <!-- name of python file without the .py inside plugins folder -->
     <arg name="pybullet_gui" default="True"/>
     <arg name="gui_options" default=""/>
-    <arg name="rviz_bringup" default="False"/>
-    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/pybullet_config.rviz"/>
+    <arg name="rviz_bringup" default="True"/>
+    <arg name="rviz_config" default="$(find pybullet_ros)/ros/config/rviz/r2d2.rviz"/>
     <arg name="start_paused" default="False"/>
     <arg name="parallel_plugin_execution" default="True"/>
     <arg name="fixed_base" default="False"/>

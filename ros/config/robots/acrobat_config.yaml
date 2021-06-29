@@ -1,0 +1,20 @@
+plugins:
+  - module: pybullet_ros.plugins.control
+    class: Control
+  - module: pybullet_ros.plugins.joint_state_pub
+    class: JointStatePub
+  - module: pybullet_ros.plugins.rgbd_camera
+    class: RGBDCamera
+
+loop_rate: 80.0
+gravity: -9.81
+max_effort: 5000.0
+
+rgbd_camera:
+  frame_name: tip_link
+  resolution:
+    width: 640
+    height: 480
+
+robots:
+  - acrobat
