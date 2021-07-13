@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 IMAGE_NAME=pybullet-ros
-MULTISTAGE_TARGET=dev
+MULTISTAGE_TARGET=develop
 CONTAINER_NAME="${IMAGE_NAME/\//-}"
 CONTAINER_NAME="${CONTAINER_NAME/:/-}-ssh"
 
