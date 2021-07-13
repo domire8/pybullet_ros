@@ -3,7 +3,10 @@
 # change to true if using nvidia graphic cards
 USE_NVIDIA_TOOLKIT=false
 
-MULTISTAGE_TARGET="ros-user"
+IMAGE_NAME=pybullet-ros
+MULTISTAGE_TARGET=runtime
+CONTAINER_NAME="${IMAGE_NAME/\//-}"
+CONTAINER_NAME="${CONTAINER_NAME/:/-}-${MULTISTAGE_TARGET}"
 
 path=$(echo "${PWD}" | rev | cut -d'/' -f-2 | rev)
 if [ "${path}" != "pybullet_ros/docker" ]; then
@@ -12,45 +15,45 @@ if [ "${path}" != "pybullet_ros/docker" ]; then
   exit 1
 fi
 
-REBUILD=0
+# BUILD
+BUILD_FLAGS=()
 while getopts 'r' opt; do
-    case $opt in
-        r) REBUILD=1 ;;
-        *) echo 'Error in command line parsing' >&2
-           exit 1
-    esac
+  case $opt in
+    r) BUILD_FLAGS+=(--no-cache) ;;
+    *) echo 'Error in command line parsing' >&2
+       exit 1
+  esac
 done
 shift "$(( OPTIND - 1 ))"
 
-IMAGE_NAME=pybullet-ros
-
-BUILD_FLAGS=(--target "${MULTISTAGE_TARGET}")
-
-if [[ "${OSTYPE}" != "darwin"* ]]; then
-  UID="$(id -u "${USER}")"
-  GID="$(id -g "${USER}")"
-  BUILD_FLAGS+=(--build-arg UID="${UID}")
-  BUILD_FLAGS+=(--build-arg GID="${GID}")
+if [[ "$OSTYPE" != "darwin"* ]]; then
+  USER_ID="$(id -u "${USER}")"
+  GROUP_ID="$(id -g "${USER}")"
+  BUILD_FLAGS+=(--build-arg UID="${USER_ID}")
+  BUILD_FLAGS+=(--build-arg GID="${GROUP_ID}")
 fi
+
 BUILD_FLAGS+=(-t "${IMAGE_NAME}:${MULTISTAGE_TARGET}")
-
-if [ "${REBUILD}" -eq 1 ]; then
-    BUILD_FLAGS+=(--no-cache)
-fi
+BUILD_FLAGS+=(--target "${MULTISTAGE_TARGET}")
 
 DOCKER_BUILDKIT=1 docker build "${BUILD_FLAGS[@]}" .. || exit
 
+# RUN
 [[ ${USE_NVIDIA_TOOLKIT} = true ]] && GPU_FLAG="--gpus all" || GPU_FLAG=""
 
-xhost +
-docker run \
+RUN_FLAGS=(-u ros)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  RUN_FLAGS+=(-e DISPLAY=host.docker.internal:0)
+else
+  xhost +
+  RUN_FLAGS+=(-e DISPLAY="${DISPLAY}")
+  RUN_FLAGS+=(-e XAUTHORITY="${XAUTHORITY}")
+  RUN_FLAGS+=(-v /tmp/.X11-unix:/tmp/.X11-unix:rw)
+fi
+
+docker run -it --rm --privileged \
   ${GPU_FLAG} \
-  --privileged \
-  -it \
-  --rm \
-  --net="host" \
-  --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-  --volume="${XAUTHORITY}:${XAUTHORITY}" \
-  --env XAUTHORITY="${XAUTHORITY}" \
-  --env DISPLAY="${DISPLAY}" \
-  "${IMAGE_NAME}:${MULTISTAGE_TARGET}"
+  "${RUN_FLAGS[@]}" \
+  --name "${CONTAINER_NAME}" \
+  --hostname "${CONTAINER_NAME}" \
+  "${IMAGE_NAME}:${MULTISTAGE_TARGET}" /bin/bash
