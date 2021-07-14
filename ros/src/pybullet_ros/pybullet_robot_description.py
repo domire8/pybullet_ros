@@ -26,35 +26,35 @@ class PyBulletRobotDescription(object):
         - fixed_joint_indices
     """
 
-    def __init__(self, namespace, uid):
+    def __init__(self, name, uid):
         """
         Constructor of the Robot Description class. Gathers information from the robot urdf description
         regarding joints and links and implements simple getter functions for robot information.
 
-        :param namespace: ROS namespace of the robot's parameters
+        :param name: name of the robot
         :param uid: server id of pybullet
 
-        :type namespace: str
+        :type name: str
         :type uid: int
         """
         self._initialized = False
-        self._namespace = namespace
+        self._namespace = "/" + name + "/"
         self._uid = uid
 
-        urdf_path = self._get_urdf_path(namespace)
+        urdf_path = self._get_urdf_path(name)
         if urdf_path is None:
             return
 
         # get initial base pose from ROS param server
-        pose_x = rospy.get_param(namespace + "pose_x", 0.0)
-        pose_y = rospy.get_param(namespace + "pose_y", 0.0)
-        pose_z = rospy.get_param(namespace + "pose_z", 1.0)
-        pose_yaw = rospy.get_param(namespace + "pose_yaw", 0.0)
-        fixed_base = rospy.get_param(namespace + "fixed_base", False)
+        pose_x = rospy.get_param(self._namespace + "pose_x", 0.0)
+        pose_y = rospy.get_param(self._namespace + "pose_y", 0.0)
+        pose_z = rospy.get_param(self._namespace + "pose_z", 1.0)
+        pose_yaw = rospy.get_param(self._namespace + "pose_yaw", 0.0)
+        fixed_base = rospy.get_param(self._namespace + "fixed_base", False)
 
         # load robot from URDF model, user decides if inertia is computed automatically by pybullet or custom
         # self collision is on by default
-        if rospy.get_param(namespace + "use_inertia_from_file", False):
+        if rospy.get_param(self._namespace + "use_inertia_from_file", False):
             urdf_flags = pb.URDF_USE_INERTIA_FROM_FILE | pb.URDF_USE_SELF_COLLISION
         else:
             urdf_flags = pb.URDF_USE_SELF_COLLISION
@@ -292,16 +292,17 @@ class PyBulletRobotDescription(object):
         return fixed_joints
 
     @staticmethod
-    def _get_urdf_path(namespace):
+    def _get_urdf_path(name):
         """
         Get robot urdf path from parameter server and create urdf file from robot_description param, if necessary.
         Return None if one of the operations failed.
 
-        :param namespace: namespace of the robot parameters
-        :type namespace: str
+        :param name: name of the robot
+        :type name: str
 
         :rtype: str
         """
+        namespace = "/" + name + "/"
         urdf_path = rospy.get_param(namespace + "urdf_path", None)
         if not urdf_path:
             rospy.logerr(
@@ -316,6 +317,7 @@ class PyBulletRobotDescription(object):
         if urdf_path[-5:] == ".urdf":
             return urdf_path
         elif urdf_path[-11:] == ".urdf.xacro":
+            urdf_path = urdf_path[:-11] + "_" + name + ".urdf"
             robot_description = rospy.get_param(namespace + "robot_description", None)
             if not robot_description:
                 rospy.logerr(
@@ -324,11 +326,11 @@ class PyBulletRobotDescription(object):
                 return None
             rospy.loginfo(
                 "[PyBulletRobotDescription::get_robot_urdf_path] Generating urdf file from param '{}robot_description' at: {}".format(
-                    namespace, urdf_path[:-6]))
+                    namespace, urdf_path))
             try:
-                with open(urdf_path[:-6], 'w') as urdf_file:
+                with open(urdf_path, 'w') as urdf_file:
                     urdf_file.write(robot_description)
-                return urdf_path[:-6]
+                return urdf_path
             except Exception as ex:
                 rospy.logerr(
                     "[PyBulletRobotDescription::get_robot_urdf_path] Failed to create urdf file from param '{}robot_description', " +
