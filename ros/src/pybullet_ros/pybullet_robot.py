@@ -39,9 +39,7 @@ class PyBulletRobot(PyBulletRobotDescription):
                 "[PyBulletRobot::init] Invalid name '{}' for a PyBulletRobot. Allowed characters are [a-zA-Z0-9_]. " +
                 "Exiting now.".format(name))
             return
-        self._namespace = "/" + name + "/"
-        PyBulletRobotDescription.__init__(self, self._namespace, self._uid)
-        self._initialized = self.is_initialized
+        PyBulletRobotDescription.__init__(self, name, self._uid)
         
     def get_joint_state_msg(self):
         msg = JointState()

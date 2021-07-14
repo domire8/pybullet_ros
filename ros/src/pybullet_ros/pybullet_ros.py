@@ -40,10 +40,13 @@ class PyBulletRosWrapper(object):
             self._robots[robot_name] = robot
             # import plugins dynamically
             for plugin in plugins:
-                module_ = plugin.pop("module")
-                class_ = plugin.pop("class")
-                params_ = plugin.copy()
-                rospy.loginfo("[PyBulletRosWrapper::init] Loading plugin: {} class from {}".format(class_, module_))
+                plugin_ = plugin.copy()
+                module_ = plugin_.pop("module")
+                class_ = plugin_.pop("class")
+                params_ = plugin_.copy()
+                rospy.loginfo(
+                    "[PyBulletRosWrapper::init] Loading plugin: {} class from {} for robot {}".format(class_, module_,
+                                                                                                      robot_name))
                 # create object of the imported file class
                 obj = getattr(importlib.import_module(module_), class_)(self._pb, robot, **params_)
                 # store objects in member variable for future use
